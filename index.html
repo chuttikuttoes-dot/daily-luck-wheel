@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Firework Celebration 🪔🌀🚀</title>
+    <title>Ultimate Firework Celebration 🪔🌀🚀🧨</title>
     <style>
         :root {
             --bg-color: #050714;
             --accent-gold: #ffd700;
             --accent-cyan: #00f2fe;
             --accent-pink: #ff4b82;
+            --accent-red: #ff3344;
             --text-color: #ffffff;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -55,7 +56,7 @@
         .game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 440px;
+            max-width: 460px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -75,12 +76,12 @@
 <body>
 
     <header>
-        <h1>Grand Fireworks 🪔🌀🚀</h1>
-        <p class="subtitle">Touch fuses with your sparkler to launch Flower Pots, Chakris & Sky Rockets!</p>
+        <h1>Ultimate Fireworks Festival 🪔🌀🚀🧨</h1>
+        <p class="subtitle">Touch fuses to light Pots, Chakris, Rockets, Ladi Strings & Sound Bombs!</p>
     </header>
 
     <div class="game-wrapper">
-        <canvas id="fireworkCanvas" width="440" height="540"></canvas>
+        <canvas id="fireworkCanvas" width="460" height="540"></canvas>
     </div>
 
     <script>
@@ -91,7 +92,7 @@
         let ignitedCount = 0;
         let pointer = { x: -100, y: -100, isDown: false };
 
-        // Web Audio API Synthesizer
+        // Web Audio Synthesizer
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -157,23 +158,37 @@
                     gain.connect(audioCtx.destination);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.6);
-                } else if (type === 'rocket_boom') {
+                } else if (type === 'pop') {
+                    // Small sharp pop for Ladi string crackers
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.4);
-                    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.4);
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'bomb_boom') {
+                    // Deep heavy sound bomb explosion
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(160, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
                 }
             } catch (e) {}
         }
 
-        // Particle Class for Fireworks Sparks
+        // Particle Class
         class SparkParticle {
             constructor(x, y, vx, vy, color, options = {}) {
                 this.x = x;
@@ -214,17 +229,14 @@
             constructor(x, y, type) {
                 this.x = x;
                 this.y = y;
-                this.width = 36;
-                this.height = 45;
+                this.width = 34;
+                this.height = 42;
                 this.type = type;
                 this.state = 'IDLE';
                 this.fuseProgress = 0;
                 this.burstTimer = 0;
-                this.maxBurstTime = type === 'rainbow' ? 240 : 170;
-
-                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
-                else if (type === 'red') this.colors = ['#ff3366', '#ff0033', '#ffd700', '#ffffff'];
-                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+                this.maxBurstTime = type === 'rainbow' ? 240 : 160;
+                this.colors = type === 'rainbow' ? ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'] : ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
             }
 
             draw() {
@@ -274,42 +286,30 @@
                         ctx.fill();
                     }
                 }
-
                 ctx.restore();
             }
 
             ignite() {
-                if (this.state === 'IDLE') {
-                    this.state = 'FUSE_BURNING';
-                    playSound('fuse');
-                }
+                if (this.state === 'IDLE') { this.state = 'FUSE_BURNING'; playSound('fuse'); }
             }
 
             update() {
                 if (this.state === 'FUSE_BURNING') {
-                    this.fuseProgress += 3;
+                    this.fuseProgress += 3.5;
                     playSound('fuse');
-                    if (this.fuseProgress >= 100) {
-                        this.state = 'BURSTING';
-                        ignitedCount++;
-                        score += 50;
-                    }
+                    if (this.fuseProgress >= 100) { this.state = 'BURSTING'; ignitedCount++; score += 50; }
                 } else if (this.state === 'BURSTING') {
                     this.burstTimer++;
-                    const particleCount = this.type === 'rainbow' ? 12 : 8;
-                    for (let i = 0; i < particleCount; i++) {
-                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * (this.type === 'rainbow' ? 0.95 : 0.65);
-                        const speed = 7 + Math.random() * (this.type === 'rainbow' ? 12 : 8);
-
+                    for (let i = 0; i < 8; i++) {
+                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.75;
+                        const speed = 7 + Math.random() * 8;
                         particles.push(new SparkParticle(
                             this.x + (Math.random() - 0.5) * 6,
                             this.y - this.height,
-                            Math.cos(angle) * speed,
-                            Math.sin(angle) * speed,
+                            Math.cos(angle) * speed, Math.sin(angle) * speed,
                             this.colors[Math.floor(Math.random() * this.colors.length)]
                         ));
                     }
-
                     if (this.burstTimer % 4 === 0) playSound('fountain');
                     if (this.burstTimer >= this.maxBurstTime) this.state = 'BURNT';
                 }
@@ -321,29 +321,20 @@
             constructor(x, y, type) {
                 this.x = x;
                 this.y = y;
-                this.radius = 20;
+                this.radius = 18;
                 this.type = type;
                 this.state = 'IDLE';
                 this.fuseProgress = 0;
                 this.angle = 0;
                 this.spinSpeed = 0;
                 this.spinTimer = 0;
-                this.maxSpinTime = type === 'rainbow' ? 240 : 170;
-
-                if (type === 'gold') this.colors = ['#ffd700', '#ffaa00', '#ffffff'];
-                else if (type === 'emerald') this.colors = ['#00e676', '#00f2fe', '#ffffff'];
-                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+                this.maxSpinTime = 160;
+                this.colors = type === 'rainbow' ? ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'] : ['#00e676', '#00f2fe', '#ffffff'];
             }
 
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
-
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.beginPath();
-                ctx.ellipse(0, 4, this.radius + 2, 8, 0, 0, Math.PI * 2);
-                ctx.fill();
-
                 ctx.rotate(this.angle);
                 ctx.fillStyle = this.state === 'BURNT' ? '#252528' : this.colors[0];
                 ctx.beginPath();
@@ -352,136 +343,95 @@
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
-                if (this.state !== 'BURNT') {
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, this.radius * 0.6, 0, Math.PI * 1.3);
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#ff3366';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
                 ctx.restore();
 
                 if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
                     ctx.strokeStyle = '#cccccc';
-                    ctx.lineWidth = 2.5;
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.moveTo(this.x, this.y - this.radius);
-                    ctx.lineTo(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 12);
+                    ctx.lineTo(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 10);
                     ctx.stroke();
 
                     if (this.state === 'FUSE_BURNING') {
                         ctx.fillStyle = '#ffff00';
                         ctx.beginPath();
-                        ctx.arc(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 12, 4, 0, Math.PI * 2);
+                        ctx.arc(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 10, 4, 0, Math.PI * 2);
                         ctx.fill();
                     }
                 }
             }
 
             ignite() {
-                if (this.state === 'IDLE') {
-                    this.state = 'FUSE_BURNING';
-                    playSound('fuse');
-                }
+                if (this.state === 'IDLE') { this.state = 'FUSE_BURNING'; playSound('fuse'); }
             }
 
             update() {
                 if (this.state === 'FUSE_BURNING') {
-                    this.fuseProgress += 3;
+                    this.fuseProgress += 3.5;
                     playSound('fuse');
-                    if (this.fuseProgress >= 100) {
-                        this.state = 'SPINNING';
-                        ignitedCount++;
-                        score += 75;
-                    }
+                    if (this.fuseProgress >= 100) { this.state = 'SPINNING'; ignitedCount++; score += 75; }
                 } else if (this.state === 'SPINNING') {
                     this.spinTimer++;
                     this.spinSpeed = Math.min(this.spinSpeed + 0.05, 0.45);
                     this.angle += this.spinSpeed;
 
-                    const numSparks = 5;
-                    for (let s = 0; s < numSparks; s++) {
-                        const emitAngle = this.angle + (s * Math.PI * 2 / numSparks);
-                        const spawnX = this.x + Math.cos(emitAngle) * (this.radius - 2);
-                        const spawnY = this.y + Math.sin(emitAngle) * (this.radius - 2);
-                        const speed = 6 + Math.random() * 7;
-
+                    for (let s = 0; s < 5; s++) {
+                        const emitAngle = this.angle + (s * Math.PI * 2 / 5);
+                        const speed = 6 + Math.random() * 6;
                         particles.push(new SparkParticle(
-                            spawnX, spawnY,
-                            -Math.sin(emitAngle) * speed,
-                            Math.cos(emitAngle) * speed * 0.4,
+                            this.x + Math.cos(emitAngle) * (this.radius - 2),
+                            this.y + Math.sin(emitAngle) * (this.radius - 2),
+                            -Math.sin(emitAngle) * speed, Math.cos(emitAngle) * speed * 0.4,
                             this.colors[Math.floor(Math.random() * this.colors.length)],
                             { gravity: 0.05, friction: 0.94 }
                         ));
                     }
-
                     if (this.spinTimer % 3 === 0) playSound('chakri_whir');
                     if (this.spinTimer >= this.maxSpinTime) this.state = 'BURNT';
                 }
             }
         }
 
-        // 3. SKY ROCKET CLASS 🚀
+        // 3. SKY ROCKET 🚀
         class SkyRocket {
             constructor(x, y, type) {
                 this.x = x;
-                this.y = y; // Ground Y position
-                this.rocketY = y - 40; // Current rocket body position
+                this.y = y;
+                this.rocketY = y - 40;
                 this.type = type;
-                this.state = 'IDLE'; // IDLE, FUSE_BURNING, FLYING, BURNT
+                this.state = 'IDLE';
                 this.fuseProgress = 0;
                 this.vy = 0;
-                this.targetApex = 90 + Math.random() * 70;
-
-                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
-                else if (type === 'cyan') this.colors = ['#00f2fe', '#4facfe', '#ffffff', '#00e676'];
-                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+                this.targetApex = 90 + Math.random() * 60;
+                this.colors = type === 'rainbow' ? ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'] : ['#00f2fe', '#4facfe', '#ffffff'];
             }
 
             draw() {
-                // Stand / Launch Stick
                 if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
                     ctx.strokeStyle = '#8d6e63';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 2.5;
                     ctx.beginPath();
                     ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.x, this.y - 45);
                     ctx.stroke();
                 }
 
-                // Rocket Body
                 if (this.state !== 'BURNT') {
                     ctx.save();
                     ctx.translate(this.x, this.rocketY);
-
-                    // Rocket cone head
                     ctx.fillStyle = this.colors[0];
                     ctx.beginPath();
-                    ctx.moveTo(0, -18);
-                    ctx.lineTo(-7, -4);
-                    ctx.lineTo(7, -4);
+                    ctx.moveTo(0, -16);
+                    ctx.lineTo(-6, -4);
+                    ctx.lineTo(6, -4);
                     ctx.closePath();
                     ctx.fill();
-
-                    // Cylinder body
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(-6, -4, 12, 22);
-
-                    // Color Stripe
-                    ctx.fillStyle = this.colors[1] || '#ff0033';
-                    ctx.fillRect(-6, 2, 12, 6);
-
+                    ctx.fillRect(-5, -4, 10, 20);
                     ctx.restore();
                 }
 
-                // Fuse drawing
                 if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
                     ctx.strokeStyle = '#cccccc';
                     ctx.lineWidth = 2;
@@ -500,10 +450,7 @@
             }
 
             ignite() {
-                if (this.state === 'IDLE') {
-                    this.state = 'FUSE_BURNING';
-                    playSound('fuse');
-                }
+                if (this.state === 'IDLE') { this.state = 'FUSE_BURNING'; playSound('fuse'); }
             }
 
             update() {
@@ -519,44 +466,186 @@
                     }
                 } else if (this.state === 'FLYING') {
                     this.rocketY += this.vy;
-                    this.vy -= 0.15; // Accelerate upward
-
-                    // Trail tail sparks & smoke
-                    for (let i = 0; i < 4; i++) {
+                    this.vy -= 0.15;
+                    for (let i = 0; i < 3; i++) {
                         particles.push(new SparkParticle(
-                            this.x + (Math.random() - 0.5) * 4,
-                            this.rocketY + 18,
-                            (Math.random() - 0.5) * 1.5,
-                            2 + Math.random() * 3,
-                            '#ffd700',
-                            { gravity: 0.1, decay: 0.04, size: 2.5 }
+                            this.x + (Math.random() - 0.5) * 4, this.rocketY + 16,
+                            (Math.random() - 0.5) * 1.5, 2 + Math.random() * 3,
+                            '#ffd700', { gravity: 0.1, decay: 0.04, size: 2.5 }
                         ));
                     }
-
-                    // Apex Explosion
                     if (this.rocketY <= this.targetApex) {
-                        this.explode();
+                        this.state = 'BURNT';
+                        playSound('bomb_boom');
+                        for (let i = 0; i < 60; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = 2 + Math.random() * 8;
+                            particles.push(new SparkParticle(
+                                this.x, this.rocketY,
+                                Math.cos(angle) * speed, Math.sin(angle) * speed,
+                                this.colors[Math.floor(Math.random() * this.colors.length)],
+                                { gravity: 0.08, friction: 0.96, decay: 0.012, size: 3 }
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. GARLAND STRING CRACKER (1000 Ladi) 🧨
+        class LadiString {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y; // Top string attachment Y
+                this.state = 'IDLE'; // IDLE, FUSE_BURNING, POPPING, BURNT
+                this.fuseProgress = 0;
+                this.popIndex = 0;
+                this.totalCrackers = 12;
+            }
+
+            draw() {
+                // Hanging main string
+                ctx.strokeStyle = '#ff3344';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - 140);
+                ctx.lineTo(this.x, this.y);
+                ctx.stroke();
+
+                // Draw small red crackers hanging along string
+                for (let i = 0; i < this.totalCrackers; i++) {
+                    const cY = this.y - 130 + (i * 10);
+                    if (this.state === 'POPPING' && i < this.popIndex) continue; // popped crackers disappear
+
+                    ctx.fillStyle = '#ff1744';
+                    ctx.fillRect(this.x - (i % 2 === 0 ? 8 : -2), cY, 7, 8);
+                    ctx.fillStyle = '#ffd700';
+                    ctx.fillRect(this.x - (i % 2 === 0 ? 8 : -2), cY + 2, 7, 2);
+                }
+
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x + 8 - this.fuseProgress * 0.08, this.y + 12);
+                    ctx.stroke();
+
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(this.x + 8 - this.fuseProgress * 0.08, this.y + 12, 4, 0, Math.PI * 2);
+                        ctx.fill();
                     }
                 }
             }
 
-            explode() {
-                this.state = 'BURNT';
-                playSound('rocket_boom');
+            ignite() {
+                if (this.state === 'IDLE') { this.state = 'FUSE_BURNING'; playSound('fuse'); }
+            }
 
-                // High-Altitude Radial Chrysanthemum Burst
-                const count = this.type === 'rainbow' ? 75 : 55;
-                for (let i = 0; i < count; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 2 + Math.random() * (this.type === 'rainbow' ? 9 : 7);
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 4;
+                    playSound('fuse');
+                    if (this.fuseProgress >= 100) { this.state = 'POPPING'; ignitedCount++; score += 120; }
+                } else if (this.state === 'POPPING') {
+                    if (frameCount % 4 === 0 && this.popIndex < this.totalCrackers) {
+                        const popY = this.y - 130 + (this.popIndex * 10);
+                        playSound('pop');
 
-                    particles.push(new SparkParticle(
-                        this.x, this.rocketY,
-                        Math.cos(angle) * speed,
-                        Math.sin(angle) * speed,
-                        this.colors[Math.floor(Math.random() * this.colors.length)],
-                        { gravity: 0.08, friction: 0.96, decay: 0.012, size: 3 }
-                    ));
+                        // Confetti & smoke debris
+                        for (let k = 0; k < 8; k++) {
+                            particles.push(new SparkParticle(
+                                this.x, popY,
+                                (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6,
+                                Math.random() > 0.5 ? '#ff1744' : '#ffd700',
+                                { gravity: 0.15, size: 2.5 }
+                            ));
+                        }
+                        this.popIndex++;
+                        if (this.popIndex >= this.totalCrackers) this.state = 'BURNT';
+                    }
+                }
+            }
+        }
+
+        // 5. ATOM SOUND BOMB 🥥
+        class SoundBomb {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.state = 'IDLE';
+                this.fuseProgress = 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                if (this.state !== 'BURNT') {
+                    // Green bomb body
+                    ctx.fillStyle = '#2e7d32';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Jute wrapping thread
+                    ctx.strokeStyle = '#8d6e63';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 10, 0, Math.PI * 1.5);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - 14);
+                    ctx.lineTo(this.x + 6 - this.fuseProgress * 0.06, this.y - 24);
+                    ctx.stroke();
+
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(this.x + 6 - this.fuseProgress * 0.06, this.y - 24, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ignite() {
+                if (this.state === 'IDLE') { this.state = 'FUSE_BURNING'; playSound('fuse'); }
+            }
+
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 3.5;
+                    playSound('fuse');
+                    if (this.fuseProgress >= 100) {
+                        this.state = 'BURNT';
+                        playSound('bomb_boom');
+                        ignitedCount++;
+                        score += 90;
+
+                        // Big Flash Boom particles
+                        for (let k = 0; k < 40; k++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = 3 + Math.random() * 8;
+                            particles.push(new SparkParticle(
+                                this.x, this.y,
+                                Math.cos(angle) * speed, Math.sin(angle) * speed,
+                                Math.random() > 0.3 ? '#ffffff' : '#ffd700',
+                                { gravity: 0.1, decay: 0.025, size: 3.5 }
+                            ));
+                        }
+                    }
                 }
             }
         }
@@ -564,22 +653,25 @@
         // Setup Scene Items
         let items = [];
         let particles = [];
+        let frameCount = 0;
 
         function resetScene() {
             items = [
-                new SkyRocket(45, 450, 'gold'),
-                new FlowerPot(105, 450, 'gold'),
-                new GroundChakri(165, 450, 'emerald'),
-                new SkyRocket(225, 450, 'rainbow'),
-                new FlowerPot(285, 450, 'red'),
-                new GroundChakri(345, 450, 'gold'),
-                new SkyRocket(395, 450, 'cyan')
+                new SkyRocket(35, 450, 'rainbow'),
+                new LadiString(90, 430),
+                new FlowerPot(145, 450, 'gold'),
+                new GroundChakri(205, 450, 'emerald'),
+                new SoundBomb(265, 445),
+                new FlowerPot(325, 450, 'rainbow'),
+                new GroundChakri(385, 450, 'rainbow'),
+                new SkyRocket(430, 450, 'cyan')
             ];
         }
         resetScene();
 
-        // Main Animation Loop
+        // Main Loop
         function loop() {
+            frameCount++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Ground floor
@@ -594,15 +686,16 @@
                 item.update();
                 item.draw();
 
-                // Fuse touch check with sparkler cursor
                 if (pointer.isDown || pointer.x > 0) {
                     let fuseY = item.y - 10;
                     if (item instanceof FlowerPot) fuseY = item.y - item.height - 10;
                     if (item instanceof GroundChakri) fuseY = item.y - item.radius - 10;
                     if (item instanceof SkyRocket) fuseY = item.y - 20;
+                    if (item instanceof LadiString) fuseY = item.y;
+                    if (item instanceof SoundBomb) fuseY = item.y - 24;
 
                     const distToFuse = Math.hypot(pointer.x - item.x, pointer.y - fuseY);
-                    if (distToFuse < 30) {
+                    if (distToFuse < 28) {
                         item.ignite();
                     }
                 }
@@ -618,7 +711,7 @@
                 }
             }
 
-            // Sparkler Cursor Effect
+            // Interactive Sparkler Cursor Effect (Phuljhadi)
             if (pointer.x > 0 && pointer.y > 0) {
                 ctx.fillStyle = '#ffffff';
                 ctx.shadowColor = '#ffd700';
@@ -645,7 +738,7 @@
             ctx.textAlign = 'right';
             ctx.fillText(`Ignited: ${ignitedCount} / ${items.length}`, canvas.width - 15, 30);
 
-            // Reset Overlay when all fireworks have burnt out
+            // Reset Overlay when all items burnt
             if (items.every(item => item.state === 'BURNT')) {
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
                 ctx.fillRect(0, 190, canvas.width, 140);
@@ -653,11 +746,11 @@
                 ctx.fillStyle = '#ffd700';
                 ctx.font = 'bold 22px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('✨ GRAND FINALE DISPLAY! ✨', canvas.width / 2, 235);
+                ctx.fillText('✨ ULTIMATE FESTIVAL DISPLAY! ✨', canvas.width / 2, 235);
 
                 ctx.fillStyle = '#ffffff';
                 ctx.font = '14px sans-serif';
-                ctx.fillText('Tap anywhere to reload fresh Rockets, Pots & Chakris!', canvas.width / 2, 280);
+                ctx.fillText('Tap anywhere to reload fresh Firecrackers!', canvas.width / 2, 280);
             }
 
             requestAnimationFrame(loop);
