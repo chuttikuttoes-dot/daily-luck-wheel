@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Firework Celebration 🪔🌀🚀🧨</title>
+    <!-- Official YouTube Playables SDK -->
+    <script src="[suspicious link removed]"></script>
     <style>
         :root {
             --bg-color: #050714;
@@ -91,6 +93,31 @@
         let score = 0;
         let ignitedCount = 0;
         let pointer = { x: -100, y: -100, isDown: false };
+        let isPausedByYouTube = false;
+
+        // --- YOUTUBE PLAYABLES SDK INTEGRATION ---
+        window.addEventListener('load', () => {
+            if (window.ytgame && window.ytgame.game) {
+                // Signal to YouTube Playables that the first frame is ready
+                window.ytgame.game.firstFrameReady();
+
+                // Handle YouTube pause / resume events
+                window.ytgame.game.onPause(() => {
+                    isPausedByYouTube = true;
+                    if (audioCtx && audioCtx.state === 'running') {
+                        audioCtx.suspend();
+                    }
+                });
+
+                window.ytgame.game.onResume(() => {
+                    isPausedByYouTube = false;
+                    if (audioCtx && audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                });
+            }
+        });
+        // ----------------------------------------
 
         // Web Audio Synthesizer
         let audioCtx = null;
@@ -100,7 +127,7 @@
         }
 
         function playSound(type) {
-            if (!audioCtx) return;
+            if (!audioCtx || isPausedByYouTube) return;
             try {
                 if (type === 'fuse') {
                     const bufferSize = audioCtx.sampleRate * 0.08;
@@ -159,7 +186,6 @@
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.6);
                 } else if (type === 'pop') {
-                    // Small sharp pop for Ladi string crackers
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'square';
@@ -172,7 +198,6 @@
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.05);
                 } else if (type === 'bomb_boom') {
-                    // Deep heavy sound bomb explosion
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'triangle';
@@ -188,7 +213,7 @@
             } catch (e) {}
         }
 
-        // Particle Class
+        // Spark Particle Class
         class SparkParticle {
             constructor(x, y, vx, vy, color, options = {}) {
                 this.x = x;
@@ -267,7 +292,7 @@
                 ctx.fill();
 
                 if (this.state !== 'BURNT') {
-                    ctx.fillStyle = this.colors[0];
+                    ctx.fillStyle = this.colors;
                     ctx.fillRect(-this.width / 3, -this.height * 0.6, this.width * 0.66, 6);
                 }
 
@@ -336,7 +361,7 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
-                ctx.fillStyle = this.state === 'BURNT' ? '#252528' : this.colors[0];
+                ctx.fillStyle = this.state === 'BURNT' ? '#252528' : this.colors;
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -420,7 +445,7 @@
                 if (this.state !== 'BURNT') {
                     ctx.save();
                     ctx.translate(this.x, this.rocketY);
-                    ctx.fillStyle = this.colors[0];
+                    ctx.fillStyle = this.colors;
                     ctx.beginPath();
                     ctx.moveTo(0, -16);
                     ctx.lineTo(-6, -4);
@@ -496,15 +521,14 @@
         class LadiString {
             constructor(x, y) {
                 this.x = x;
-                this.y = y; // Top string attachment Y
-                this.state = 'IDLE'; // IDLE, FUSE_BURNING, POPPING, BURNT
+                this.y = y;
+                this.state = 'IDLE';
                 this.fuseProgress = 0;
                 this.popIndex = 0;
                 this.totalCrackers = 12;
             }
 
             draw() {
-                // Hanging main string
                 ctx.strokeStyle = '#ff3344';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
@@ -512,10 +536,9 @@
                 ctx.lineTo(this.x, this.y);
                 ctx.stroke();
 
-                // Draw small red crackers hanging along string
                 for (let i = 0; i < this.totalCrackers; i++) {
                     const cY = this.y - 130 + (i * 10);
-                    if (this.state === 'POPPING' && i < this.popIndex) continue; // popped crackers disappear
+                    if (this.state === 'POPPING' && i < this.popIndex) continue;
 
                     ctx.fillStyle = '#ff1744';
                     ctx.fillRect(this.x - (i % 2 === 0 ? 8 : -2), cY, 7, 8);
@@ -554,7 +577,6 @@
                         const popY = this.y - 130 + (this.popIndex * 10);
                         playSound('pop');
 
-                        // Confetti & smoke debris
                         for (let k = 0; k < 8; k++) {
                             particles.push(new SparkParticle(
                                 this.x, popY,
@@ -584,7 +606,6 @@
                 ctx.translate(this.x, this.y);
 
                 if (this.state !== 'BURNT') {
-                    // Green bomb body
                     ctx.fillStyle = '#2e7d32';
                     ctx.beginPath();
                     ctx.arc(0, 0, 14, 0, Math.PI * 2);
@@ -593,7 +614,6 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
 
-                    // Jute wrapping thread
                     ctx.strokeStyle = '#8d6e63';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
@@ -634,7 +654,6 @@
                         ignitedCount++;
                         score += 90;
 
-                        // Big Flash Boom particles
                         for (let k = 0; k < 40; k++) {
                             const angle = Math.random() * Math.PI * 2;
                             const speed = 3 + Math.random() * 8;
@@ -669,88 +688,90 @@
         }
         resetScene();
 
-        // Main Loop
+        // Main Game Loop
         function loop() {
-            frameCount++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!isPausedByYouTube) {
+                frameCount++;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Ground floor
-            ctx.fillStyle = '#110c08';
-            ctx.fillRect(0, 445, canvas.width, 95);
-            ctx.strokeStyle = '#2b1b10';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(0, 445, canvas.width, 95);
+                // Ground floor
+                ctx.fillStyle = '#110c08';
+                ctx.fillRect(0, 445, canvas.width, 95);
+                ctx.strokeStyle = '#2b1b10';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, 445, canvas.width, 95);
 
-            // Update & Render Fireworks
-            items.forEach(item => {
-                item.update();
-                item.draw();
+                // Update & Render Fireworks
+                items.forEach(item => {
+                    item.update();
+                    item.draw();
 
-                if (pointer.isDown || pointer.x > 0) {
-                    let fuseY = item.y - 10;
-                    if (item instanceof FlowerPot) fuseY = item.y - item.height - 10;
-                    if (item instanceof GroundChakri) fuseY = item.y - item.radius - 10;
-                    if (item instanceof SkyRocket) fuseY = item.y - 20;
-                    if (item instanceof LadiString) fuseY = item.y;
-                    if (item instanceof SoundBomb) fuseY = item.y - 24;
+                    if (pointer.isDown || pointer.x > 0) {
+                        let fuseY = item.y - 10;
+                        if (item instanceof FlowerPot) fuseY = item.y - item.height - 10;
+                        if (item instanceof GroundChakri) fuseY = item.y - item.radius - 10;
+                        if (item instanceof SkyRocket) fuseY = item.y - 20;
+                        if (item instanceof LadiString) fuseY = item.y;
+                        if (item instanceof SoundBomb) fuseY = item.y - 24;
 
-                    const distToFuse = Math.hypot(pointer.x - item.x, pointer.y - fuseY);
-                    if (distToFuse < 28) {
-                        item.ignite();
+                        const distToFuse = Math.hypot(pointer.x - item.x, pointer.y - fuseY);
+                        if (distToFuse < 28) {
+                            item.ignite();
+                        }
+                    }
+                });
+
+                // Update & Render Sparks
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.update();
+                    p.draw();
+                    if (p.alpha <= 0 || p.y > 530) {
+                        particles.splice(i, 1);
                     }
                 }
-            });
 
-            // Update & Render Sparks
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.update();
-                p.draw();
-                if (p.alpha <= 0 || p.y > 530) {
-                    particles.splice(i, 1);
+                // Interactive Sparkler Cursor Effect (Phuljhadi)
+                if (pointer.x > 0 && pointer.y > 0) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = '#ffd700';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    for (let k = 0; k < 2; k++) {
+                        particles.push(new SparkParticle(
+                            pointer.x, pointer.y,
+                            (Math.random() - 0.5) * 3,
+                            (Math.random() - 0.5) * 3,
+                            '#ffd700'
+                        ));
+                    }
                 }
-            }
 
-            // Interactive Sparkler Cursor Effect (Phuljhadi)
-            if (pointer.x > 0 && pointer.y > 0) {
+                // HUD
                 ctx.fillStyle = '#ffffff';
-                ctx.shadowColor = '#ffd700';
-                ctx.shadowBlur = 12;
-                ctx.beginPath();
-                ctx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.font = 'bold 15px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Spark Score: ${score}`, 15, 30);
+                ctx.textAlign = 'right';
+                ctx.fillText(`Ignited: ${ignitedCount} / ${items.length}`, canvas.width - 15, 30);
 
-                for (let k = 0; k < 2; k++) {
-                    particles.push(new SparkParticle(
-                        pointer.x, pointer.y,
-                        (Math.random() - 0.5) * 3,
-                        (Math.random() - 0.5) * 3,
-                        '#ffd700'
-                    ));
+                // Reset Overlay when all items burnt
+                if (items.every(item => item.state === 'BURNT')) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+                    ctx.fillRect(0, 190, canvas.width, 140);
+
+                    ctx.fillStyle = '#ffd700';
+                    ctx.font = 'bold 22px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✨ ULTIMATE FESTIVAL DISPLAY! ✨', canvas.width / 2, 235);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '14px sans-serif';
+                    ctx.fillText('Tap anywhere to reload fresh Firecrackers!', canvas.width / 2, 280);
                 }
-            }
-
-            // HUD
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 15px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Spark Score: ${score}`, 15, 30);
-            ctx.textAlign = 'right';
-            ctx.fillText(`Ignited: ${ignitedCount} / ${items.length}`, canvas.width - 15, 30);
-
-            // Reset Overlay when all items burnt
-            if (items.every(item => item.state === 'BURNT')) {
-                ctx.fillStyle = 'rgba(0,0,0,0.65)';
-                ctx.fillRect(0, 190, canvas.width, 140);
-
-                ctx.fillStyle = '#ffd700';
-                ctx.font = 'bold 22px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('✨ ULTIMATE FESTIVAL DISPLAY! ✨', canvas.width / 2, 235);
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '14px sans-serif';
-                ctx.fillText('Tap anywhere to reload fresh Firecrackers!', canvas.width / 2, 280);
             }
 
             requestAnimationFrame(loop);
