@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flower Pot Firecracker Simulator 🪔🎆</title>
+    <title>Grand Firework Celebration 🪔🌀🚀</title>
     <style>
         :root {
             --bg-color: #050714;
             --accent-gold: #ffd700;
             --accent-cyan: #00f2fe;
-            --accent-red: #ff3366;
+            --accent-pink: #ff4b82;
             --text-color: #ffffff;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -41,21 +41,21 @@
         }
 
         h1 {
-            font-size: 1.7rem;
+            font-size: 1.6rem;
             color: var(--accent-gold);
             text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
             margin-bottom: 4px;
         }
 
         p.subtitle {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: #a0aec0;
         }
 
         .game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -63,8 +63,8 @@
 
         canvas#fireworkCanvas {
             width: 100%;
-            height: 520px;
-            background: linear-gradient(180deg, #0a0e27 0%, #02030a 80%, #1a0f07 100%);
+            height: 540px;
+            background: linear-gradient(180deg, #050818 0%, #080c28 50%, #1a0f07 100%);
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.2);
             touch-action: none;
@@ -75,12 +75,12 @@
 <body>
 
     <header>
-        <h1>Flower Pot Firecracker 🪔🎆</h1>
-        <p class="subtitle">Touch fuses with your sparkler to launch roaring fountains!</p>
+        <h1>Grand Fireworks 🪔🌀🚀</h1>
+        <p class="subtitle">Touch fuses with your sparkler to launch Flower Pots, Chakris & Sky Rockets!</p>
     </header>
 
     <div class="game-wrapper">
-        <canvas id="fireworkCanvas" width="420" height="520"></canvas>
+        <canvas id="fireworkCanvas" width="440" height="540"></canvas>
     </div>
 
     <script>
@@ -91,7 +91,7 @@
         let ignitedCount = 0;
         let pointer = { x: -100, y: -100, isDown: false };
 
-        // Web Audio API Sound Synthesizer
+        // Web Audio API Synthesizer
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -102,183 +102,90 @@
             if (!audioCtx) return;
             try {
                 if (type === 'fuse') {
-                    // White noise sizzling sound
-                    const bufferSize = audioCtx.sampleRate * 0.1;
+                    const bufferSize = audioCtx.sampleRate * 0.08;
                     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        data[i] = Math.random() * 2 - 1;
-                    }
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
                     const noise = audioCtx.createBufferSource();
                     noise.buffer = buffer;
-
                     const filter = audioCtx.createBiquadFilter();
                     filter.type = 'highpass';
-                    filter.frequency.value = 1000;
+                    filter.frequency.value = 1200;
 
                     const gain = audioCtx.createGain();
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
 
                     noise.connect(filter);
                     filter.connect(gain);
                     gain.connect(audioCtx.destination);
                     noise.start();
-                } else if (type === 'burst') {
-                    // Roaring fountain rumble sound
+                } else if (type === 'fountain') {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.3);
-
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-
+                    osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'chakri_whir') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400 + Math.random() * 200, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800 + Math.random() * 400, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'rocket_launch') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                } else if (type === 'rocket_boom') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
                 }
             } catch (e) {}
         }
 
-        // Flower Pot Firecracker Class
-        class FlowerPot {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y; // Base Y position on ground
-                this.width = 45;
-                this.height = 55;
-                this.type = type; // 'gold', 'red', 'cyan', 'rainbow'
-                this.state = 'IDLE'; // IDLE, FUSE_BURNING, BURSTING, BURNT
-                this.fuseProgress = 0;
-                this.burstTimer = 0;
-                this.maxBurstTime = type === 'rainbow' ? 300 : 200;
-
-                // Color configuration
-                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
-                else if (type === 'red') this.colors = ['#ff3366', '#ff0033', '#ffd700', '#ffffff'];
-                else if (type === 'cyan') this.colors = ['#00f2fe', '#4facfe', '#ffffff', '#00e676'];
-                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffcc00', '#00ffcc', '#0099ff', '#e040fb'];
-            }
-
-            draw() {
-                // 1. Draw Cone Body
-                ctx.save();
-                ctx.translate(this.x, this.y);
-
-                // Cone shadow
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.beginPath();
-                ctx.ellipse(0, 0, this.width / 1.6, 8, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Burnt pot appearance
-                if (this.state === 'BURNT') {
-                    ctx.fillStyle = '#222225';
-                } else {
-                    // Terracotta clay gradient with color band
-                    let grad = ctx.createLinearGradient(-this.width / 2, 0, this.width / 2, 0);
-                    grad.addColorStop(0, '#8d2d14');
-                    grad.addColorStop(0.5, '#d84315');
-                    grad.addColorStop(1, '#641e0b');
-                    ctx.fillStyle = grad;
-                }
-
-                // Draw Cone Shape
-                ctx.beginPath();
-                ctx.moveTo(-this.width / 2, 0);
-                ctx.lineTo(-this.width / 4, -this.height);
-                ctx.lineTo(this.width / 4, -this.height);
-                ctx.lineTo(this.width / 2, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                // Decorative Stripe on Pot
-                if (this.state !== 'BURNT') {
-                    ctx.fillStyle = this.colors[0];
-                    ctx.fillRect(-this.width / 3, -this.height * 0.6, this.width * 0.66, 8);
-                }
-
-                // 2. Fuse (when not burnt)
-                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
-                    ctx.strokeStyle = '#cccccc';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.moveTo(0, -this.height);
-                    ctx.quadraticCurveTo(8, -this.height - 12, 12 - this.fuseProgress * 0.1, -this.height - 18 + this.fuseProgress * 0.2);
-                    ctx.stroke();
-
-                    // Fuse spark if burning
-                    if (this.state === 'FUSE_BURNING') {
-                        ctx.fillStyle = '#ffff00';
-                        ctx.beginPath();
-                        ctx.arc(10 - this.fuseProgress * 0.1, -this.height - 16 + this.fuseProgress * 0.2, 4 + Math.random() * 3, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
-
-                ctx.restore();
-            }
-
-            ignite() {
-                if (this.state === 'IDLE') {
-                    this.state = 'FUSE_BURNING';
-                    playSound('fuse');
-                }
-            }
-
-            update() {
-                if (this.state === 'FUSE_BURNING') {
-                    this.fuseProgress += 2.5;
-                    playSound('fuse');
-
-                    if (this.fuseProgress >= 100) {
-                        this.state = 'BURSTING';
-                        ignitedCount++;
-                        score += 50;
-                    }
-                } else if (this.state === 'BURSTING') {
-                    this.burstTimer++;
-
-                    // Emit fountain particles
-                    const particleCount = this.type === 'rainbow' ? 12 : 8;
-                    for (let i = 0; i < particleCount; i++) {
-                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * (this.type === 'rainbow' ? 0.9 : 0.65);
-                        const speed = 7 + Math.random() * (this.type === 'rainbow' ? 12 : 8);
-                        
-                        particles.push(new SparkParticle(
-                            this.x + (Math.random() - 0.5) * 6,
-                            this.y - this.height,
-                            Math.cos(angle) * speed,
-                            Math.sin(angle) * speed,
-                            this.colors[Math.floor(Math.random() * this.colors.length)]
-                        ));
-                    }
-
-                    if (this.burstTimer % 4 === 0) playSound('burst');
-
-                    if (this.burstTimer >= this.maxBurstTime) {
-                        this.state = 'BURNT';
-                    }
-                }
-            }
-        }
-
-        // Particle Class for Firecracker Sparks
+        // Particle Class for Fireworks Sparks
         class SparkParticle {
-            constructor(x, y, vx, vy, color) {
+            constructor(x, y, vx, vy, color, options = {}) {
                 this.x = x;
                 this.y = y;
                 this.vx = vx;
                 this.vy = vy;
                 this.color = color;
-                this.gravity = 0.22;
-                this.friction = 0.98;
+                this.gravity = options.gravity !== undefined ? options.gravity : 0.2;
+                this.friction = options.friction !== undefined ? options.friction : 0.98;
                 this.alpha = 1;
-                this.decay = 0.015 + Math.random() * 0.02;
-                this.size = Math.random() * 3 + 2;
+                this.decay = options.decay || (0.015 + Math.random() * 0.02);
+                this.size = options.size || (Math.random() * 3 + 2);
             }
 
             update() {
@@ -302,58 +209,417 @@
             }
         }
 
-        // Initialize Ground Pots
-        let pots = [];
+        // 1. FLOWER POT (Anaar)
+        class FlowerPot {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.width = 36;
+                this.height = 45;
+                this.type = type;
+                this.state = 'IDLE';
+                this.fuseProgress = 0;
+                this.burstTimer = 0;
+                this.maxBurstTime = type === 'rainbow' ? 240 : 170;
+
+                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
+                else if (type === 'red') this.colors = ['#ff3366', '#ff0033', '#ffd700', '#ffffff'];
+                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.width / 1.6, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (this.state === 'BURNT') {
+                    ctx.fillStyle = '#222225';
+                } else {
+                    let grad = ctx.createLinearGradient(-this.width / 2, 0, this.width / 2, 0);
+                    grad.addColorStop(0, '#8d2d14');
+                    grad.addColorStop(0.5, '#d84315');
+                    grad.addColorStop(1, '#641e0b');
+                    ctx.fillStyle = grad;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(-this.width / 2, 0);
+                ctx.lineTo(-this.width / 4, -this.height);
+                ctx.lineTo(this.width / 4, -this.height);
+                ctx.lineTo(this.width / 2, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                if (this.state !== 'BURNT') {
+                    ctx.fillStyle = this.colors[0];
+                    ctx.fillRect(-this.width / 3, -this.height * 0.6, this.width * 0.66, 6);
+                }
+
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.height);
+                    ctx.quadraticCurveTo(8, -this.height - 10, 10 - this.fuseProgress * 0.1, -this.height - 15 + this.fuseProgress * 0.15);
+                    ctx.stroke();
+
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(10 - this.fuseProgress * 0.1, -this.height - 15 + this.fuseProgress * 0.15, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+            ignite() {
+                if (this.state === 'IDLE') {
+                    this.state = 'FUSE_BURNING';
+                    playSound('fuse');
+                }
+            }
+
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 3;
+                    playSound('fuse');
+                    if (this.fuseProgress >= 100) {
+                        this.state = 'BURSTING';
+                        ignitedCount++;
+                        score += 50;
+                    }
+                } else if (this.state === 'BURSTING') {
+                    this.burstTimer++;
+                    const particleCount = this.type === 'rainbow' ? 12 : 8;
+                    for (let i = 0; i < particleCount; i++) {
+                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * (this.type === 'rainbow' ? 0.95 : 0.65);
+                        const speed = 7 + Math.random() * (this.type === 'rainbow' ? 12 : 8);
+
+                        particles.push(new SparkParticle(
+                            this.x + (Math.random() - 0.5) * 6,
+                            this.y - this.height,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed,
+                            this.colors[Math.floor(Math.random() * this.colors.length)]
+                        ));
+                    }
+
+                    if (this.burstTimer % 4 === 0) playSound('fountain');
+                    if (this.burstTimer >= this.maxBurstTime) this.state = 'BURNT';
+                }
+            }
+        }
+
+        // 2. CHAKRI (Ground Spinner)
+        class GroundChakri {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.type = type;
+                this.state = 'IDLE';
+                this.fuseProgress = 0;
+                this.angle = 0;
+                this.spinSpeed = 0;
+                this.spinTimer = 0;
+                this.maxSpinTime = type === 'rainbow' ? 240 : 170;
+
+                if (type === 'gold') this.colors = ['#ffd700', '#ffaa00', '#ffffff'];
+                else if (type === 'emerald') this.colors = ['#00e676', '#00f2fe', '#ffffff'];
+                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath();
+                ctx.ellipse(0, 4, this.radius + 2, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.rotate(this.angle);
+                ctx.fillStyle = this.state === 'BURNT' ? '#252528' : this.colors[0];
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                if (this.state !== 'BURNT') {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.6, 0, Math.PI * 1.3);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ff3366';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - this.radius);
+                    ctx.lineTo(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 12);
+                    ctx.stroke();
+
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(this.x + 8 - this.fuseProgress * 0.08, this.y - this.radius - 12, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ignite() {
+                if (this.state === 'IDLE') {
+                    this.state = 'FUSE_BURNING';
+                    playSound('fuse');
+                }
+            }
+
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 3;
+                    playSound('fuse');
+                    if (this.fuseProgress >= 100) {
+                        this.state = 'SPINNING';
+                        ignitedCount++;
+                        score += 75;
+                    }
+                } else if (this.state === 'SPINNING') {
+                    this.spinTimer++;
+                    this.spinSpeed = Math.min(this.spinSpeed + 0.05, 0.45);
+                    this.angle += this.spinSpeed;
+
+                    const numSparks = 5;
+                    for (let s = 0; s < numSparks; s++) {
+                        const emitAngle = this.angle + (s * Math.PI * 2 / numSparks);
+                        const spawnX = this.x + Math.cos(emitAngle) * (this.radius - 2);
+                        const spawnY = this.y + Math.sin(emitAngle) * (this.radius - 2);
+                        const speed = 6 + Math.random() * 7;
+
+                        particles.push(new SparkParticle(
+                            spawnX, spawnY,
+                            -Math.sin(emitAngle) * speed,
+                            Math.cos(emitAngle) * speed * 0.4,
+                            this.colors[Math.floor(Math.random() * this.colors.length)],
+                            { gravity: 0.05, friction: 0.94 }
+                        ));
+                    }
+
+                    if (this.spinTimer % 3 === 0) playSound('chakri_whir');
+                    if (this.spinTimer >= this.maxSpinTime) this.state = 'BURNT';
+                }
+            }
+        }
+
+        // 3. SKY ROCKET CLASS 🚀
+        class SkyRocket {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y; // Ground Y position
+                this.rocketY = y - 40; // Current rocket body position
+                this.type = type;
+                this.state = 'IDLE'; // IDLE, FUSE_BURNING, FLYING, BURNT
+                this.fuseProgress = 0;
+                this.vy = 0;
+                this.targetApex = 90 + Math.random() * 70;
+
+                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
+                else if (type === 'cyan') this.colors = ['#00f2fe', '#4facfe', '#ffffff', '#00e676'];
+                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffd700', '#00f2fe', '#00e676', '#e040fb'];
+            }
+
+            draw() {
+                // Stand / Launch Stick
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#8d6e63';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x, this.y - 45);
+                    ctx.stroke();
+                }
+
+                // Rocket Body
+                if (this.state !== 'BURNT') {
+                    ctx.save();
+                    ctx.translate(this.x, this.rocketY);
+
+                    // Rocket cone head
+                    ctx.fillStyle = this.colors[0];
+                    ctx.beginPath();
+                    ctx.moveTo(0, -18);
+                    ctx.lineTo(-7, -4);
+                    ctx.lineTo(7, -4);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Cylinder body
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-6, -4, 12, 22);
+
+                    // Color Stripe
+                    ctx.fillStyle = this.colors[1] || '#ff0033';
+                    ctx.fillRect(-6, 2, 12, 6);
+
+                    ctx.restore();
+                }
+
+                // Fuse drawing
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - 20);
+                    ctx.lineTo(this.x + 6 - this.fuseProgress * 0.06, this.y - 10 + this.fuseProgress * 0.1);
+                    ctx.stroke();
+
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(this.x + 6 - this.fuseProgress * 0.06, this.y - 10 + this.fuseProgress * 0.1, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ignite() {
+                if (this.state === 'IDLE') {
+                    this.state = 'FUSE_BURNING';
+                    playSound('fuse');
+                }
+            }
+
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 3.5;
+                    playSound('fuse');
+                    if (this.fuseProgress >= 100) {
+                        this.state = 'FLYING';
+                        this.vy = -7;
+                        playSound('rocket_launch');
+                        ignitedCount++;
+                        score += 100;
+                    }
+                } else if (this.state === 'FLYING') {
+                    this.rocketY += this.vy;
+                    this.vy -= 0.15; // Accelerate upward
+
+                    // Trail tail sparks & smoke
+                    for (let i = 0; i < 4; i++) {
+                        particles.push(new SparkParticle(
+                            this.x + (Math.random() - 0.5) * 4,
+                            this.rocketY + 18,
+                            (Math.random() - 0.5) * 1.5,
+                            2 + Math.random() * 3,
+                            '#ffd700',
+                            { gravity: 0.1, decay: 0.04, size: 2.5 }
+                        ));
+                    }
+
+                    // Apex Explosion
+                    if (this.rocketY <= this.targetApex) {
+                        this.explode();
+                    }
+                }
+            }
+
+            explode() {
+                this.state = 'BURNT';
+                playSound('rocket_boom');
+
+                // High-Altitude Radial Chrysanthemum Burst
+                const count = this.type === 'rainbow' ? 75 : 55;
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * (this.type === 'rainbow' ? 9 : 7);
+
+                    particles.push(new SparkParticle(
+                        this.x, this.rocketY,
+                        Math.cos(angle) * speed,
+                        Math.sin(angle) * speed,
+                        this.colors[Math.floor(Math.random() * this.colors.length)],
+                        { gravity: 0.08, friction: 0.96, decay: 0.012, size: 3 }
+                    ));
+                }
+            }
+        }
+
+        // Setup Scene Items
+        let items = [];
         let particles = [];
 
-        function resetPots() {
-            pots = [
-                new FlowerPot(70, 440, 'gold'),
-                new FlowerPot(150, 440, 'red'),
-                new FlowerPot(230, 440, 'cyan'),
-                new FlowerPot(310, 440, 'gold'),
-                new FlowerPot(370, 440, 'rainbow')
+        function resetScene() {
+            items = [
+                new SkyRocket(45, 450, 'gold'),
+                new FlowerPot(105, 450, 'gold'),
+                new GroundChakri(165, 450, 'emerald'),
+                new SkyRocket(225, 450, 'rainbow'),
+                new FlowerPot(285, 450, 'red'),
+                new GroundChakri(345, 450, 'gold'),
+                new SkyRocket(395, 450, 'cyan')
             ];
         }
-        resetPots();
+        resetScene();
 
-        // Main Loop
+        // Main Animation Loop
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Ground reflection & texture
+            // Ground floor
             ctx.fillStyle = '#110c08';
-            ctx.fillRect(0, 435, canvas.width, 85);
+            ctx.fillRect(0, 445, canvas.width, 95);
             ctx.strokeStyle = '#2b1b10';
             ctx.lineWidth = 2;
-            ctx.strokeRect(0, 435, canvas.width, 85);
+            ctx.strokeRect(0, 445, canvas.width, 95);
 
-            // Check touch ignition against pot fuses
-            pots.forEach(pot => {
-                pot.update();
-                pot.draw();
+            // Update & Render Fireworks
+            items.forEach(item => {
+                item.update();
+                item.draw();
 
+                // Fuse touch check with sparkler cursor
                 if (pointer.isDown || pointer.x > 0) {
-                    const distToFuse = Math.hypot(pointer.x - pot.x, pointer.y - (pot.y - pot.height - 10));
-                    if (distToFuse < 35) {
-                        pot.ignite();
+                    let fuseY = item.y - 10;
+                    if (item instanceof FlowerPot) fuseY = item.y - item.height - 10;
+                    if (item instanceof GroundChakri) fuseY = item.y - item.radius - 10;
+                    if (item instanceof SkyRocket) fuseY = item.y - 20;
+
+                    const distToFuse = Math.hypot(pointer.x - item.x, pointer.y - fuseY);
+                    if (distToFuse < 30) {
+                        item.ignite();
                     }
                 }
             });
 
-            // Update & Draw Sparks
+            // Update & Render Sparks
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.update();
                 p.draw();
-                if (p.alpha <= 0 || p.y > 510) {
+                if (p.alpha <= 0 || p.y > 530) {
                     particles.splice(i, 1);
                 }
             }
 
-            // Draw Sparkler Cursor
+            // Sparkler Cursor Effect
             if (pointer.x > 0 && pointer.y > 0) {
-                // Sparkler tip glowing effect
                 ctx.fillStyle = '#ffffff';
                 ctx.shadowColor = '#ffd700';
                 ctx.shadowBlur = 12;
@@ -361,7 +627,6 @@
                 ctx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Sparkler emissions
                 for (let k = 0; k < 2; k++) {
                     particles.push(new SparkParticle(
                         pointer.x, pointer.y,
@@ -372,27 +637,27 @@
                 }
             }
 
-            // Draw Score & HUD
+            // HUD
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 15px sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText(`Spark Score: ${score}`, 15, 30);
             ctx.textAlign = 'right';
-            ctx.fillText(`Ignited: ${ignitedCount}`, canvas.width - 15, 30);
+            ctx.fillText(`Ignited: ${ignitedCount} / ${items.length}`, canvas.width - 15, 30);
 
-            // Reset Button if all pots burnt out
-            if (pots.every(p => p.state === 'BURNT')) {
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(0, 180, canvas.width, 140);
+            // Reset Overlay when all fireworks have burnt out
+            if (items.every(item => item.state === 'BURNT')) {
+                ctx.fillStyle = 'rgba(0,0,0,0.65)';
+                ctx.fillRect(0, 190, canvas.width, 140);
 
                 ctx.fillStyle = '#ffd700';
                 ctx.font = 'bold 22px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('✨ SPECTACULAR DISPLAY! ✨', canvas.width / 2, 225);
+                ctx.fillText('✨ GRAND FINALE DISPLAY! ✨', canvas.width / 2, 235);
 
                 ctx.fillStyle = '#ffffff';
                 ctx.font = '14px sans-serif';
-                ctx.fillText('Tap anywhere to set up fresh Flower Pots!', canvas.width / 2, 270);
+                ctx.fillText('Tap anywhere to reload fresh Rockets, Pots & Chakris!', canvas.width / 2, 280);
             }
 
             requestAnimationFrame(loop);
@@ -407,8 +672,8 @@
             pointer.x = (e.clientX - rect.left) * (canvas.width / rect.width);
             pointer.y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-            if (pots.every(p => p.state === 'BURNT')) {
-                resetPots();
+            if (items.every(item => item.state === 'BURNT')) {
+                resetScene();
             }
         }
 
