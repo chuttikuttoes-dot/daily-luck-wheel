@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pot Repair & Bloom 🪴🌸</title>
+    <title>Flower Pot Firecracker Simulator 🪔🎆</title>
     <style>
         :root {
-            --bg-color: #1a2f23;
-            --card-bg: #274735;
-            --accent-green: #00e676;
-            --accent-pink: #ff69b4;
+            --bg-color: #050714;
             --accent-gold: #ffd700;
+            --accent-cyan: #00f2fe;
+            --accent-red: #ff3366;
             --text-color: #ffffff;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -32,85 +31,67 @@
             justify-content: center;
             min-height: 100vh;
             padding: 15px 10px;
-            background-image: radial-gradient(circle at 50% 30%, #2a523b 0%, #1a2f23 80%);
+            background-image: radial-gradient(circle at 50% 20%, #151936 0%, #050714 80%);
+            overflow: hidden;
         }
 
         header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         h1 {
             font-size: 1.7rem;
-            color: var(--accent-green);
-            text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+            color: var(--accent-gold);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
             margin-bottom: 4px;
         }
 
         p.subtitle {
             font-size: 0.9rem;
-            color: #a3b899;
+            color: #a0aec0;
         }
 
         .game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        canvas#gameCanvas {
+        canvas#fireworkCanvas {
             width: 100%;
             height: 520px;
-            background: linear-gradient(180deg, #87ceeb 0%, #e0f7fa 60%, #5d4037 60%, #3e2723 100%);
+            background: linear-gradient(180deg, #0a0e27 0%, #02030a 80%, #1a0f07 100%);
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 230, 118, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.2);
             touch-action: none;
-            cursor: pointer;
+            cursor: crosshair;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Pot Repair & Bloom 🪴🌸</h1>
-        <p class="subtitle">Tap cracks to repair the pot & catch water to bloom!</p>
+        <h1>Flower Pot Firecracker 🪔🎆</h1>
+        <p class="subtitle">Touch fuses with your sparkler to launch roaring fountains!</p>
     </header>
 
     <div class="game-wrapper">
-        <canvas id="gameCanvas" width="400" height="520"></canvas>
+        <canvas id="fireworkCanvas" width="420" height="520"></canvas>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = document.getElementById('fireworkCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Game State
-        let gameState = 'START'; // START, PLAYING, GAMEOVER
         let score = 0;
-        let potHealth = 100;
-        let plantGrowth = 0; // 0 to 100%
-        let bloomLevel = 1;
-        let frameCount = 0;
+        let ignitedCount = 0;
+        let pointer = { x: -100, y: -100, isDown: false };
 
-        // Pot geometry
-        const pot = {
-            topX: 130,
-            topY: 310,
-            topW: 140,
-            botX: 150,
-            botY: 440,
-            botW: 100,
-            height: 130
-        };
-
-        let cracks = [];
-        let particles = [];
-        let drops = [];
-
-        // Web Audio Synthesizer
+        // Web Audio API Sound Synthesizer
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -120,413 +101,328 @@
         function playSound(type) {
             if (!audioCtx) return;
             try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                if (type === 'fuse') {
+                    // White noise sizzling sound
+                    const bufferSize = audioCtx.sampleRate * 0.1;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
 
-                if (type === 'repair') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.value = 1000;
+
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    noise.start();
+                } else if (type === 'burst') {
+                    // Roaring fountain rumble sound
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.3);
+
                     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
-                } else if (type === 'water') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
-                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.15);
-                } else if (type === 'crack') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.08);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.08);
-                } else if (type === 'shatter') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.4);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.4);
-                } else if (type === 'bloom') {
-                    const notes = [523.25, 659.25, 783.99, 1046.50];
-                    notes.forEach((freq, i) => {
-                        const o = audioCtx.createOscillator();
-                        const g = audioCtx.createGain();
-                        o.type = 'sine';
-                        o.frequency.value = freq;
-                        const st = audioCtx.currentTime + i * 0.1;
-                        g.gain.setValueAtTime(0.2, st);
-                        g.gain.exponentialRampToValueAtTime(0.001, st + 0.3);
-                        o.connect(g);
-                        g.connect(audioCtx.destination);
-                        o.start(st);
-                        o.stop(st + 0.3);
-                    });
+                    osc.stop(audioCtx.currentTime + 0.3);
                 }
             } catch (e) {}
         }
 
-        // Spawn a new Crack on the Pot
-        function spawnCrack() {
-            // Pick a point on pot surface
-            const t = Math.random();
-            const startX = pot.topX + (pot.botX - pot.topX) * t + Math.random() * 40;
-            const startY = pot.topY + t * pot.height;
+        // Flower Pot Firecracker Class
+        class FlowerPot {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y; // Base Y position on ground
+                this.width = 45;
+                this.height = 55;
+                this.type = type; // 'gold', 'red', 'cyan', 'rainbow'
+                this.state = 'IDLE'; // IDLE, FUSE_BURNING, BURSTING, BURNT
+                this.fuseProgress = 0;
+                this.burstTimer = 0;
+                this.maxBurstTime = type === 'rainbow' ? 300 : 200;
 
-            // Generate crack branching line segments
-            const segments = [];
-            let currX = startX;
-            let currY = startY;
-
-            for (let i = 0; i < 4; i++) {
-                const nextX = currX + (Math.random() - 0.5) * 30;
-                const nextY = currY + (Math.random() - 0.2) * 25;
-                segments.push({ x1: currX, y1: currY, x2: nextX, y2: nextY });
-                currX = nextX;
-                currY = nextY;
+                // Color configuration
+                if (type === 'gold') this.colors = ['#ffd700', '#ffae00', '#ffffff', '#ff8c00'];
+                else if (type === 'red') this.colors = ['#ff3366', '#ff0033', '#ffd700', '#ffffff'];
+                else if (type === 'cyan') this.colors = ['#00f2fe', '#4facfe', '#ffffff', '#00e676'];
+                else if (type === 'rainbow') this.colors = ['#ff0055', '#ffcc00', '#00ffcc', '#0099ff', '#e040fb'];
             }
 
-            cracks.push({
-                x: startX,
-                y: startY,
-                radius: 35,
-                segments: segments,
-                age: 0
-            });
+            draw() {
+                // 1. Draw Cone Body
+                ctx.save();
+                ctx.translate(this.x, this.y);
 
-            playSound('crack');
-        }
-
-        // Spawn falling water or sun
-        function spawnDrop() {
-            const isSun = Math.random() > 0.6;
-            drops.push({
-                x: Math.random() * (canvas.width - 60) + 30,
-                y: -20,
-                speed: 2 + Math.random() * 2,
-                type: isSun ? 'sun' : 'water',
-                radius: 16
-            });
-        }
-
-        // Reset Game
-        function startGame() {
-            initAudio();
-            score = 0;
-            potHealth = 100;
-            plantGrowth = 0;
-            bloomLevel = 1;
-            frameCount = 0;
-            cracks = [];
-            particles = [];
-            drops = [];
-            gameState = 'PLAYING';
-        }
-
-        // Update Loop
-        function update() {
-            if (gameState !== 'PLAYING') return;
-
-            frameCount++;
-
-            // Spawn cracks periodically (speed increases with score)
-            const crackInterval = Math.max(40, 110 - Math.floor(score / 30));
-            if (frameCount % crackInterval === 0) {
-                spawnCrack();
-            }
-
-            // Spawn water drops/sun
-            if (frameCount % 70 === 0) {
-                spawnDrop();
-            }
-
-            // Damage pot health based on active cracks
-            if (cracks.length > 0) {
-                potHealth -= cracks.length * 0.08;
-                if (potHealth <= 0) {
-                    potHealth = 0;
-                    gameOver();
-                }
-            }
-
-            // Update Cracks age
-            cracks.forEach(c => c.age++);
-
-            // Update Drops
-            for (let i = drops.length - 1; i >= 0; i--) {
-                let d = drops[i];
-                d.y += d.speed;
-
-                if (d.y > canvas.height + 20) {
-                    drops.splice(i, 1);
-                }
-            }
-
-            // Update particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= 0.03;
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-        }
-
-        // Draw Flower Pot & Plant
-        function drawPotAndPlant() {
-            // 1. Soil
-            ctx.fillStyle = '#4e342e';
-            ctx.beginPath();
-            ctx.ellipse(200, 310, 65, 15, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 2. Growing Plant
-            const stemHeight = 40 + (plantGrowth * 1.2);
-            const plantTopY = 310 - stemHeight;
-
-            // Stem
-            ctx.strokeStyle = '#2e7d32';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(200, 310);
-            ctx.quadraticCurveTo(195, 310 - stemHeight/2, 200, plantTopY);
-            ctx.stroke();
-
-            // Leaves
-            ctx.fillStyle = '#4caf50';
-            ctx.beginPath();
-            ctx.ellipse(180, 310 - stemHeight*0.4, 20, 10, -Math.PI/6, 0, Math.PI*2);
-            ctx.ellipse(220, 310 - stemHeight*0.6, 20, 10, Math.PI/6, 0, Math.PI*2);
-            ctx.fill();
-
-            // Flower Head / Bloom
-            if (plantGrowth >= 25) {
-                ctx.fillStyle = bloomLevel >= 2 ? '#ff4081' : '#ffeb3b';
+                // Cone shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.beginPath();
-                ctx.arc(200, plantTopY, 14 + (bloomLevel * 4), 0, Math.PI * 2);
+                ctx.ellipse(0, 0, this.width / 1.6, 8, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Petals
-                ctx.fillStyle = bloomLevel >= 3 ? '#e91e63' : '#ff9800';
-                for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-                    const px = 200 + Math.cos(a) * (18 + bloomLevel*3);
-                    const py = plantTopY + Math.sin(a) * (18 + bloomLevel*3);
+                // Burnt pot appearance
+                if (this.state === 'BURNT') {
+                    ctx.fillStyle = '#222225';
+                } else {
+                    // Terracotta clay gradient with color band
+                    let grad = ctx.createLinearGradient(-this.width / 2, 0, this.width / 2, 0);
+                    grad.addColorStop(0, '#8d2d14');
+                    grad.addColorStop(0.5, '#d84315');
+                    grad.addColorStop(1, '#641e0b');
+                    ctx.fillStyle = grad;
+                }
+
+                // Draw Cone Shape
+                ctx.beginPath();
+                ctx.moveTo(-this.width / 2, 0);
+                ctx.lineTo(-this.width / 4, -this.height);
+                ctx.lineTo(this.width / 4, -this.height);
+                ctx.lineTo(this.width / 2, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                // Decorative Stripe on Pot
+                if (this.state !== 'BURNT') {
+                    ctx.fillStyle = this.colors[0];
+                    ctx.fillRect(-this.width / 3, -this.height * 0.6, this.width * 0.66, 8);
+                }
+
+                // 2. Fuse (when not burnt)
+                if (this.state === 'IDLE' || this.state === 'FUSE_BURNING') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.arc(px, py, 10, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.moveTo(0, -this.height);
+                    ctx.quadraticCurveTo(8, -this.height - 12, 12 - this.fuseProgress * 0.1, -this.height - 18 + this.fuseProgress * 0.2);
+                    ctx.stroke();
+
+                    // Fuse spark if burning
+                    if (this.state === 'FUSE_BURNING') {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.beginPath();
+                        ctx.arc(10 - this.fuseProgress * 0.1, -this.height - 16 + this.fuseProgress * 0.2, 4 + Math.random() * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+            ignite() {
+                if (this.state === 'IDLE') {
+                    this.state = 'FUSE_BURNING';
+                    playSound('fuse');
                 }
             }
 
-            // 3. Clay Pot Body
-            ctx.fillStyle = '#d84315'; // Terracotta clay color
-            ctx.beginPath();
-            ctx.moveTo(pot.topX, pot.topY);
-            ctx.lineTo(pot.topX + pot.topW, pot.topY);
-            ctx.lineTo(pot.botX + pot.botW, pot.botY);
-            ctx.lineTo(pot.botX, pot.botY);
-            ctx.closePath();
-            ctx.fill();
+            update() {
+                if (this.state === 'FUSE_BURNING') {
+                    this.fuseProgress += 2.5;
+                    playSound('fuse');
 
-            // Pot Rim
-            ctx.fillStyle = '#bf360c';
-            ctx.fillRect(pot.topX - 10, pot.topY - 15, pot.topW + 20, 20);
+                    if (this.fuseProgress >= 100) {
+                        this.state = 'BURSTING';
+                        ignitedCount++;
+                        score += 50;
+                    }
+                } else if (this.state === 'BURSTING') {
+                    this.burstTimer++;
 
-            // 4. Draw Active Cracks
-            cracks.forEach(c => {
-                ctx.strokeStyle = '#1b0000';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                c.segments.forEach(s => {
-                    ctx.moveTo(s.x1, s.y1);
-                    ctx.lineTo(s.x2, s.y2);
-                });
-                ctx.stroke();
+                    // Emit fountain particles
+                    const particleCount = this.type === 'rainbow' ? 12 : 8;
+                    for (let i = 0; i < particleCount; i++) {
+                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * (this.type === 'rainbow' ? 0.9 : 0.65);
+                        const speed = 7 + Math.random() * (this.type === 'rainbow' ? 12 : 8);
+                        
+                        particles.push(new SparkParticle(
+                            this.x + (Math.random() - 0.5) * 6,
+                            this.y - this.height,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed,
+                            this.colors[Math.floor(Math.random() * this.colors.length)]
+                        ));
+                    }
 
-                // Glowing warning pulse on old cracks
-                if (c.age > 60) {
-                    ctx.fillStyle = 'rgba(255, 23, 68, 0.4)';
-                    ctx.beginPath();
-                    ctx.arc(c.x, c.y, 20, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (this.burstTimer % 4 === 0) playSound('burst');
+
+                    if (this.burstTimer >= this.maxBurstTime) {
+                        this.state = 'BURNT';
+                    }
                 }
-            });
+            }
         }
 
-        // Draw Canvas Frame
-        function draw() {
+        // Particle Class for Firecracker Sparks
+        class SparkParticle {
+            constructor(x, y, vx, vy, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.gravity = 0.22;
+                this.friction = 0.98;
+                this.alpha = 1;
+                this.decay = 0.015 + Math.random() * 0.02;
+                this.size = Math.random() * 3 + 2;
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Initialize Ground Pots
+        let pots = [];
+        let particles = [];
+
+        function resetPots() {
+            pots = [
+                new FlowerPot(70, 440, 'gold'),
+                new FlowerPot(150, 440, 'red'),
+                new FlowerPot(230, 440, 'cyan'),
+                new FlowerPot(310, 440, 'gold'),
+                new FlowerPot(370, 440, 'rainbow')
+            ];
+        }
+        resetPots();
+
+        // Main Loop
+        function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawPotAndPlant();
+            // Ground reflection & texture
+            ctx.fillStyle = '#110c08';
+            ctx.fillRect(0, 435, canvas.width, 85);
+            ctx.strokeStyle = '#2b1b10';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 435, canvas.width, 85);
 
-            // Draw Falling Drops (Water / Sun)
-            drops.forEach(d => {
-                ctx.font = '22px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(d.type === 'water' ? '💧' : '☀️', d.x, d.y);
+            // Check touch ignition against pot fuses
+            pots.forEach(pot => {
+                pot.update();
+                pot.draw();
+
+                if (pointer.isDown || pointer.x > 0) {
+                    const distToFuse = Math.hypot(pointer.x - pot.x, pointer.y - (pot.y - pot.height - 10));
+                    if (distToFuse < 35) {
+                        pot.ignite();
+                    }
+                }
             });
 
-            // Draw Particles
-            particles.forEach(p => {
-                ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.alpha})`;
+            // Update & Draw Sparks
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0 || p.y > 510) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Draw Sparkler Cursor
+            if (pointer.x > 0 && pointer.y > 0) {
+                // Sparkler tip glowing effect
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 12;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
                 ctx.fill();
-            });
 
-            // Draw HUD (Health & Growth Bars)
-            if (gameState === 'PLAYING') {
-                // Pot Health Bar
-                ctx.fillStyle = '#37474f';
-                ctx.fillRect(15, 15, 150, 14);
-                ctx.fillStyle = potHealth > 40 ? '#00e676' : '#ff1744';
-                ctx.fillRect(15, 15, (potHealth / 100) * 150, 14);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 11px sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(`POT INTEGRITY: ${Math.floor(potHealth)}%`, 20, 26);
+                // Sparkler emissions
+                for (let k = 0; k < 2; k++) {
+                    particles.push(new SparkParticle(
+                        pointer.x, pointer.y,
+                        (Math.random() - 0.5) * 3,
+                        (Math.random() - 0.5) * 3,
+                        '#ffd700'
+                    ));
+                }
+            }
 
-                // Plant Bloom Progress
-                ctx.fillStyle = '#37474f';
-                ctx.fillRect(235, 15, 150, 14);
-                ctx.fillStyle = '#ff69b4';
-                ctx.fillRect(235, 15, (plantGrowth / 100) * 150, 14);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(`BLOOM: Lvl ${bloomLevel} (${Math.floor(plantGrowth)}%)`, 240, 26);
+            // Draw Score & HUD
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Spark Score: ${score}`, 15, 30);
+            ctx.textAlign = 'right';
+            ctx.fillText(`Ignited: ${ignitedCount}`, canvas.width - 15, 30);
 
-                // Score
-                ctx.font = 'bold 16px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Score: ${score}`, canvas.width / 2, 60);
-            } else if (gameState === 'START') {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'center';
-                ctx.font = 'bold 24px sans-serif';
-                ctx.fillText('Pot Repair & Bloom 🪴🌸', canvas.width / 2, 180);
-
-                ctx.font = '14px sans-serif';
-                ctx.fillStyle = '#00e676';
-                ctx.fillText('Tap cracks on the pot before it shatters!', canvas.width / 2, 220);
-                ctx.fillText('Catch falling Water 💧 & Sun ☀️ to grow!', canvas.width / 2, 245);
+            // Reset Button if all pots burnt out
+            if (pots.every(p => p.state === 'BURNT')) {
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(0, 180, canvas.width, 140);
 
                 ctx.fillStyle = '#ffd700';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.fillText('Tap / Click Anywhere to Start', canvas.width / 2, 320);
-            } else if (gameState === 'GAMEOVER') {
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#ff1744';
+                ctx.font = 'bold 22px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.font = 'bold 28px sans-serif';
-                ctx.fillText('POT SHATTERED! 💥', canvas.width / 2, 180);
+                ctx.fillText('✨ SPECTACULAR DISPLAY! ✨', canvas.width / 2, 225);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '18px sans-serif';
-                ctx.fillText(`Final Score: ${score}`, canvas.width / 2, 230);
-                ctx.fillText(`Flowers Bloomed: Lvl ${bloomLevel}`, canvas.width / 2, 265);
-
-                ctx.fillStyle = '#00e676';
-                ctx.font = 'bold 15px sans-serif';
-                ctx.fillText('Tap Anywhere to Play Again 🔄', canvas.width / 2, 320);
-            }
-        }
-
-        function gameOver() {
-            playSound('shatter');
-            gameState = 'GAMEOVER';
-
-            // Shatter particles
-            for (let i = 0; i < 40; i++) {
-                particles.push({
-                    x: 200 + (Math.random() - 0.5) * 120,
-                    y: 370 + (Math.random() - 0.5) * 80,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    radius: Math.random() * 6 + 3,
-                    r: 216, g: 67, b: 21,
-                    alpha: 1
-                });
-            }
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-        requestAnimationFrame(gameLoop);
-
-        // Click / Touch Interaction Handling
-        canvas.addEventListener('pointerdown', (e) => {
-            if (gameState !== 'PLAYING') {
-                startGame();
-                return;
+                ctx.font = '14px sans-serif';
+                ctx.fillText('Tap anywhere to set up fresh Flower Pots!', canvas.width / 2, 270);
             }
 
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+
+        // Input Handlers
+        function handlePointer(e) {
+            initAudio();
             const rect = canvas.getBoundingClientRect();
-            const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            pointer.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            pointer.y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-            // 1. Check if player tapped a Crack on the Pot
-            let crackRepaired = false;
-            for (let i = cracks.length - 1; i >= 0; i--) {
-                let c = cracks[i];
-                let dist = Math.hypot(clickX - c.x, clickY - c.y);
-                if (dist < c.radius + 15) {
-                    cracks.splice(i, 1);
-                    score += 15;
-                    potHealth = Math.min(100, potHealth + 3);
-                    playSound('repair');
-                    crackRepaired = true;
-
-                    // Sparkle particles
-                    for (let p = 0; p < 8; p++) {
-                        particles.push({
-                            x: clickX, y: clickY,
-                            vx: (Math.random() - 0.5) * 4,
-                            vy: (Math.random() - 0.5) * 4,
-                            radius: 3, r: 0, g: 230, b: 118, alpha: 1
-                        });
-                    }
-                    break;
-                }
+            if (pots.every(p => p.state === 'BURNT')) {
+                resetPots();
             }
+        }
 
-            // 2. Check if player tapped a falling Water/Sun Drop
-            if (!crackRepaired) {
-                for (let i = drops.length - 1; i >= 0; i--) {
-                    let d = drops[i];
-                    let dist = Math.hypot(clickX - d.x, clickY - d.y);
-                    if (dist < d.radius + 15) {
-                        drops.splice(i, 1);
-                        score += 10;
-                        plantGrowth += 8;
-                        playSound('water');
+        canvas.addEventListener('pointerdown', (e) => {
+            pointer.isDown = true;
+            handlePointer(e);
+        });
 
-                        // Level up bloom
-                        if (plantGrowth >= 100) {
-                            plantGrowth = 0;
-                            bloomLevel++;
-                            score += 50;
-                            playSound('bloom');
-                        }
-                        break;
-                    }
-                }
-            }
+        canvas.addEventListener('pointermove', (e) => {
+            if (pointer.isDown) handlePointer(e);
+        });
+
+        window.addEventListener('pointerup', () => {
+            pointer.isDown = false;
         });
     </script>
 </body>
