@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Surf Rider 🏄‍♂️🌊</title>
+    <title>Retro Surf Rider 🏄‍♂️🌊 - Leaderboard Edition</title>
     <style>
         :root {
             --bg-color: #0d1b2a;
             --card-bg: #1b263b;
             --accent-cyan: #00f2fe;
             --accent-gold: #ffd700;
+            --accent-pink: #ff4b82;
             --text-color: #ffffff;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -30,8 +31,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 10px;
-            overflow: hidden;
+            padding: 15px 10px;
         }
 
         header {
@@ -45,7 +45,7 @@
             text-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
         }
 
-        .game-container {
+        .game-wrapper {
             position: relative;
             width: 100%;
             max-width: 400px;
@@ -56,14 +56,75 @@
 
         canvas#surfCanvas {
             width: 100%;
-            height: 520px;
+            height: 480px;
             background: linear-gradient(180deg, #0077b6 0%, #0096c7 40%, #03045e 100%);
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.2);
             touch-action: none;
         }
 
-        /* Mobile Touch Controls */
+        /* High Score Input Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            background: rgba(27, 38, 59, 0.95);
+            border: 2px solid var(--accent-gold);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+            z-index: 20;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay h2 {
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay p {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            margin-bottom: 12px;
+        }
+
+        .name-input-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        input#playerInitials {
+            width: 100px;
+            padding: 8px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 1px solid var(--accent-cyan);
+            background: #0d1b2a;
+            color: #fff;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        button.btn-save {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-cyan), #00b4d8);
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Mobile Controls */
         .controls-panel {
             display: flex;
             justify-content: space-between;
@@ -79,15 +140,11 @@
             border-radius: 12px;
             background: var(--card-bg);
             color: #fff;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             border: 1px solid rgba(255, 255, 255, 0.15);
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            active {
-                background: var(--accent-cyan);
-                color: #000;
-            }
         }
 
         .btn-jump {
@@ -98,13 +155,23 @@
 <body>
 
     <header>
-        <h1>Retro Surf Rider 🏄‍♂️🌊</h1>
+        <h1>Retro Surf Rider 🏄‍♂️🏆</h1>
     </header>
 
-    <div class="game-container">
-        <canvas id="surfCanvas" width="400" height="520"></canvas>
+    <div class="game-wrapper">
+        <canvas id="surfCanvas" width="400" height="480"></canvas>
 
-        <!-- Touch Controls for Mobile / Instagram Webviews -->
+        <!-- New High Score Entry Modal -->
+        <div id="highScoreModal" class="modal-overlay">
+            <h2>🏆 NEW HIGH SCORE!</h2>
+            <p>Enter your 3-letter initials:</p>
+            <div class="name-input-group">
+                <input type="text" id="playerInitials" maxlength="3" placeholder="SUR" autofocus>
+                <button id="saveScoreBtn" class="btn-save">SAVE</button>
+            </div>
+        </div>
+
+        <!-- Touch Controls -->
         <div class="controls-panel">
             <button id="btnLeft" class="ctrl-btn">◀ Left</button>
             <button id="btnJump" class="ctrl-btn btn-jump">🦘 Jump</button>
@@ -116,12 +183,46 @@
         const canvas = document.getElementById('surfCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Game State Variables
-        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        const modal = document.getElementById('highScoreModal');
+        const initialsInput = document.getElementById('playerInitials');
+        const saveScoreBtn = document.getElementById('saveScoreBtn');
+
+        let gameState = 'START'; // START, PLAYING, ENTER_SCORE, GAMEOVER
         let score = 0;
-        let highScore = localStorage.getItem('surf_highscore') || 0;
         let speed = 4;
         let frameCount = 0;
+        let pendingScore = 0;
+
+        // Default Leaderboard
+        const defaultLeaderboard = [
+            { name: "SUR", score: 120 },
+            { name: "WAV", score: 95 },
+            { name: "RAD", score: 70 },
+            { name: "SEA", score: 50 },
+            { name: "FIN", score: 30 }
+        ];
+
+        function getLeaderboard() {
+            const data = localStorage.getItem('surf_leaderboard_v2');
+            return data ? JSON.parse(data) : defaultLeaderboard;
+        }
+
+        function saveLeaderboard(lb) {
+            localStorage.setItem('surf_leaderboard_v2', JSON.stringify(lb));
+        }
+
+        function qualifiesForLeaderboard(newScore) {
+            const lb = getLeaderboard();
+            return lb.length < 5 || newScore > lb[lb.length - 1].score;
+        }
+
+        function addScoreToLeaderboard(name, newScore) {
+            let lb = getLeaderboard();
+            lb.push({ name: name.toUpperCase() || 'ANON', score: Math.floor(newScore) });
+            lb.sort((a, b) => b.score - a.score);
+            lb = lb.slice(0, 5); // Keep top 5
+            saveLeaderboard(lb);
+        }
 
         // Web Audio Synthesizer
         let audioCtx = null;
@@ -148,8 +249,8 @@
                     osc.stop(audioCtx.currentTime + 0.15);
                 } else if (type === 'coin') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); // A5
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08);
                     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
                     osc.start();
@@ -169,7 +270,7 @@
         // Surfer Player Object
         const player = {
             x: canvas.width / 2,
-            y: 380,
+            y: 360,
             width: 30,
             height: 45,
             vx: 0,
@@ -177,7 +278,7 @@
             isJumping: false,
             jumpHeight: 0,
             jumpVelocity: 0,
-            
+
             reset() {
                 this.x = canvas.width / 2;
                 this.vx = 0;
@@ -195,14 +296,12 @@
 
             update() {
                 this.x += this.vx;
-                // Screen boundary constraints
                 if (this.x < 30) this.x = 30;
                 if (this.x > canvas.width - 30) this.x = canvas.width - 30;
 
-                // Jump gravity physics
                 if (this.isJumping) {
                     this.jumpHeight += this.jumpVelocity;
-                    this.jumpVelocity -= 0.6; // Gravity
+                    this.jumpVelocity -= 0.6;
                     if (this.jumpHeight <= 0) {
                         this.jumpHeight = 0;
                         this.isJumping = false;
@@ -214,7 +313,6 @@
                 ctx.save();
                 ctx.translate(this.x, this.y - this.jumpHeight);
 
-                // Shadow when jumping
                 if (this.jumpHeight > 0) {
                     ctx.beginPath();
                     ctx.ellipse(0, this.jumpHeight + 15, 18, 6, 0, 0, Math.PI * 2);
@@ -222,7 +320,6 @@
                     ctx.fill();
                 }
 
-                // Surfboard
                 ctx.fillStyle = '#ffd700';
                 ctx.beginPath();
                 ctx.ellipse(0, 10, 10, 24, 0, 0, Math.PI * 2);
@@ -231,22 +328,19 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Surfer Figure
                 ctx.fillStyle = '#00f2fe';
                 ctx.beginPath();
-                ctx.arc(0, -8, 7, 0, Math.PI * 2); // Head
+                ctx.arc(0, -8, 7, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.fillStyle = '#ff4b82'; // Torso
+                ctx.fillStyle = '#ff4b82';
                 ctx.fillRect(-6, -1, 12, 14);
 
                 ctx.restore();
             }
         };
 
-        // Entities Array (Obstacles & Coins)
         let entities = [];
-
         function spawnEntity() {
             const types = [
                 { type: 'rock', emoji: '🪨', size: 24, isObstacle: true },
@@ -254,7 +348,6 @@
                 { type: 'buoy', emoji: '🟡', size: 20, isObstacle: true },
                 { type: 'star', emoji: '⭐', size: 22, isObstacle: false }
             ];
-            
             const selected = types[Math.floor(Math.random() * types.length)];
             entities.push({
                 ...selected,
@@ -263,7 +356,6 @@
             });
         }
 
-        // Ocean Wave Lines Animation
         let waveOffset = 0;
         function drawWaves() {
             waveOffset += speed * 0.5;
@@ -281,40 +373,59 @@
             }
         }
 
-        // Main Loop Update
+        function drawLeaderboardTable(startY) {
+            const lb = getLeaderboard();
+            ctx.fillStyle = 'rgba(13, 27, 42, 0.85)';
+            ctx.fillRect(40, startY, 320, 170);
+            ctx.strokeStyle = '#00f2fe';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(40, startY, 320, 170);
+
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏆 TOP 5 SURFERS 🏆', canvas.width / 2, startY + 25);
+
+            ctx.font = '13px monospace';
+            ctx.textAlign = 'left';
+            lb.forEach((entry, idx) => {
+                const rank = `#${idx + 1}`;
+                const name = entry.name.padEnd(6, ' ');
+                const sc = entry.score.toString().padStart(5, ' ');
+
+                ctx.fillStyle = idx === 0 ? '#ffd700' : '#ffffff';
+                ctx.fillText(`${rank}  ${name}  ${sc} pts`, 70, startY + 55 + (idx * 22));
+            });
+        }
+
         function update() {
             if (gameState !== 'PLAYING') return;
 
             frameCount++;
             score += 0.1;
-            speed = 4 + Math.floor(score / 50) * 0.5; // Gradually speed up
+            speed = 4 + Math.floor(score / 50) * 0.5;
 
             player.update();
 
-            // Spawn Entities
             if (frameCount % Math.max(30, 80 - Math.floor(speed * 3)) === 0) {
                 spawnEntity();
             }
 
-            // Update Entities
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 e.y += speed;
 
-                // Collision Detection
                 let dx = player.x - e.x;
                 let dy = player.y - player.jumpHeight - e.y;
                 let distance = Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < player.width / 2 + e.size / 2) {
                     if (e.isObstacle) {
-                        // Jump over check
                         if (!player.isJumping || player.jumpHeight < 15) {
                             gameOver();
                             return;
                         }
                     } else {
-                        // Collect Starfish
                         score += 25;
                         playSound('coin');
                         entities.splice(i, 1);
@@ -322,30 +433,24 @@
                     }
                 }
 
-                // Remove off-screen items
                 if (e.y > canvas.height + 40) {
                     entities.splice(i, 1);
                 }
             }
         }
 
-        // Render Frame
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             drawWaves();
 
             if (gameState === 'PLAYING') {
                 player.draw();
-
-                // Draw Entities
                 entities.forEach(e => {
                     ctx.font = `${e.size}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.fillText(e.emoji, e.x, e.y);
                 });
 
-                // HUD Score
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 16px sans-serif';
                 ctx.textAlign = 'left';
@@ -353,27 +458,33 @@
             } else if (gameState === 'START') {
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
-                ctx.font = 'bold 24px sans-serif';
-                ctx.fillText('Retro Surf Rider 🏄‍♂️', canvas.width / 2, 200);
+                ctx.font = 'bold 22px sans-serif';
+                ctx.fillText('Retro Surf Rider 🏄‍♂️', canvas.width / 2, 70);
 
-                ctx.font = '14px sans-serif';
+                ctx.font = '13px sans-serif';
                 ctx.fillStyle = '#00f2fe';
-                ctx.fillText('Dodge Rocks & Sharks | Catch Starfish', canvas.width / 2, 240);
-                ctx.fillText('Press SPACE or Tap Jump to Start', canvas.width / 2, 280);
+                ctx.fillText('Dodge Obstacles | Jump Waves | Collect Stars', canvas.width / 2, 95);
+
+                drawLeaderboardTable(130);
+
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 15px sans-serif';
+                ctx.fillText('Press SPACE or Tap Jump to Start', canvas.width / 2, 345);
             } else if (gameState === 'GAMEOVER') {
                 ctx.fillStyle = '#ff4b82';
                 ctx.textAlign = 'center';
-                ctx.font = 'bold 28px sans-serif';
-                ctx.fillText('WIPE OUT! 💥', canvas.width / 2, 180);
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText('WIPE OUT! 💥', canvas.width / 2, 60);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '18px sans-serif';
-                ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, 230);
-                ctx.fillText(`High Score: ${Math.floor(highScore)}`, canvas.width / 2, 260);
+                ctx.font = '15px sans-serif';
+                ctx.fillText(`Your Score: ${Math.floor(score)}`, canvas.width / 2, 90);
 
-                ctx.font = '14px sans-serif';
+                drawLeaderboardTable(120);
+
                 ctx.fillStyle = '#00f2fe';
-                ctx.fillText('Press SPACE or Tap to Play Again', canvas.width / 2, 310);
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText('Press SPACE or Tap to Play Again', canvas.width / 2, 330);
             }
         }
 
@@ -391,25 +502,43 @@
             frameCount = 0;
             entities = [];
             player.reset();
+            modal.style.display = 'none';
             gameState = 'PLAYING';
         }
 
         function gameOver() {
             playSound('crash');
-            gameState = 'GAMEOVER';
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('surf_highscore', highScore);
+            pendingScore = Math.floor(score);
+
+            if (qualifiesForLeaderboard(pendingScore)) {
+                gameState = 'ENTER_SCORE';
+                modal.style.display = 'block';
+                initialsInput.value = '';
+                initialsInput.focus();
+            } else {
+                gameState = 'GAMEOVER';
             }
         }
 
-        // Event Listeners (Keyboard)
+        saveScoreBtn.addEventListener('click', () => {
+            const initials = initialsInput.value.trim() || 'SUR';
+            addScoreToLeaderboard(initials, pendingScore);
+            modal.style.display = 'none';
+            gameState = 'GAMEOVER';
+        });
+
+        // Keyboard Controls
         window.addEventListener('keydown', e => {
+            if (gameState === 'ENTER_SCORE') {
+                if (e.key === 'Enter') saveScoreBtn.click();
+                return;
+            }
+
             if (e.code === 'ArrowLeft' || e.code === 'KeyA') player.vx = -player.speed;
             if (e.code === 'ArrowRight' || e.code === 'KeyD') player.vx = player.speed;
             if (e.code === 'Space' || e.code === 'ArrowUp') {
                 if (gameState === 'PLAYING') player.jump();
-                else startGame();
+                else if (gameState === 'START' || gameState === 'GAMEOVER') startGame();
             }
         });
 
@@ -428,14 +557,14 @@
         btnLeft.addEventListener('pointerup', () => { player.vx = 0; });
         btnRight.addEventListener('pointerdown', () => { player.vx = player.speed; });
         btnRight.addEventListener('pointerup', () => { player.vx = 0; });
-        
+
         btnJump.addEventListener('pointerdown', () => {
             if (gameState === 'PLAYING') player.jump();
-            else startGame();
+            else if (gameState === 'START' || gameState === 'GAMEOVER') startGame();
         });
 
         canvas.addEventListener('pointerdown', () => {
-            if (gameState !== 'PLAYING') startGame();
+            if (gameState === 'START' || gameState === 'GAMEOVER') startGame();
         });
     </script>
 </body>
