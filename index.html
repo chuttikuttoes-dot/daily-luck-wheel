@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="ta">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Daily Luck Spin Wheel 🎡✨</title>
+    <title>Retro Surf Rider 🏄‍♂️🌊</title>
     <style>
         :root {
-            --bg-color: #0b0d1b;
-            --card-bg: #161933;
-            --accent-gold: #ffd700;
-            --accent-purple: #8a2be2;
+            --bg-color: #0d1b2a;
+            --card-bg: #1b263b;
             --accent-cyan: #00f2fe;
-            --text-color: #f0f4f8;
+            --accent-gold: #ffd700;
+            --text-color: #ffffff;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -19,6 +18,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         body {
@@ -28,593 +28,415 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding: 20px 15px;
-            background-image: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0b0d1b 70%);
+            padding: 10px;
+            overflow: hidden;
         }
 
         header {
             text-align: center;
-            margin-bottom: 15px;
-            position: relative;
-            width: 100%;
-            max-width: 480px;
-        }
-
-        .lang-switch {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--accent-cyan);
-            color: #fff;
-            padding: 5px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         h1 {
-            font-size: 1.8rem;
-            color: var(--accent-gold);
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            margin-top: 15px;
-            margin-bottom: 5px;
+            font-size: 1.6rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
         }
 
-        p.subtitle {
-            font-size: 0.9rem;
-            color: #a0aec0;
-        }
-
-        .container {
+        .game-container {
+            position: relative;
             width: 100%;
-            max-width: 480px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
         }
 
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 20px;
+        canvas#surfCanvas {
             width: 100%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
+            height: 520px;
+            background: linear-gradient(180deg, #0077b6 0%, #0096c7 40%, #03045e 100%);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.2);
+            touch-action: none;
         }
 
-        .input-group {
+        /* Mobile Touch Controls */
+        .controls-panel {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 12px;
             gap: 10px;
         }
 
-        label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--accent-cyan);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        input[type="date"] {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 10px;
-            border: 1px solid #303651;
-            background: #0f1123;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        button.btn-primary {
-            width: 100%;
+        .ctrl-btn {
+            flex: 1;
             padding: 14px;
             border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent-purple), #4a00e0);
+            border-radius: 12px;
+            background: var(--card-bg);
             color: #fff;
-            font-size: 1rem;
+            font-size: 1.2rem;
             font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            active {
+                background: var(--accent-cyan);
+                color: #000;
+            }
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .zodiac-info {
-            display: none;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            text-align: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.15);
-        }
-
-        .zodiac-badge {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px;
-            border-radius: 8px;
-        }
-
-        .zodiac-badge .val {
-            font-weight: bold;
-            color: var(--accent-gold);
-            font-size: 0.9rem;
-        }
-
-        .zodiac-badge .lbl {
-            font-size: 0.75rem;
-            color: #a0aec0;
-        }
-
-        .wheel-wrapper {
-            position: relative;
-            width: 320px;
-            height: 320px;
-            margin: 10px 0;
-        }
-
-        .pointer {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid var(--accent-gold);
-            z-index: 10;
-        }
-
-        canvas#wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            box-shadow: 0 0 25px rgba(0, 242, 254, 0.2);
-        }
-
-        .result-card {
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .luck-meter {
-            height: 12px;
-            background: #0f1123;
-            border-radius: 6px;
-            overflow: hidden;
-            margin: 10px 0 15px 0;
-        }
-
-        .luck-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00f2fe, #00e676, #ffd700);
-            transition: width 1s ease-out;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background: #0f1123;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .stat-box .title {
-            font-size: 0.75rem;
-            color: #a0aec0;
-        }
-
-        .stat-box .value {
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: var(--accent-cyan);
-            margin-top: 2px;
+        .btn-jump {
+            background: linear-gradient(135deg, #ff7d00, #ff4500);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <button id="langBtn" class="lang-switch">தமிழ் 🔄</button>
-        <h1 id="appTitle">Cosmic Daily Luck Wheel 🎡✨</h1>
-        <p id="appSubtitle" class="subtitle">Enter your birthday to unlock today's celestial alignment</p>
+        <h1>Retro Surf Rider 🏄‍♂️🌊</h1>
     </header>
 
-    <div class="container">
-        <div class="card">
-            <div class="input-group">
-                <label id="dateLabel" for="birthday">Select Your Birthday</label>
-                <input type="date" id="birthday" required>
-                <button id="spinBtn" class="btn-primary">Unlock & Spin Wheel 🚀</button>
-            </div>
+    <div class="game-container">
+        <canvas id="surfCanvas" width="400" height="520"></canvas>
 
-            <div id="zodiacInfo" class="zodiac-info">
-                <div class="zodiac-badge">
-                    <div id="zodiacSign" class="val">-</div>
-                    <div id="lblZodiac" class="lbl">Zodiac</div>
-                </div>
-                <div class="zodiac-badge">
-                    <div id="zodiacElement" class="val">-</div>
-                    <div id="lblElement" class="lbl">Element</div>
-                </div>
-                <div class="zodiac-badge">
-                    <div id="lifePath" class="val">-</div>
-                    <div id="lblLifePath" class="lbl">Life Path</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="wheel-wrapper">
-            <div class="pointer"></div>
-            <canvas id="wheel" width="320" height="320"></canvas>
-        </div>
-
-        <div id="resultCard" class="card result-card">
-            <h2 id="resultTitle" style="color: var(--accent-gold); font-size: 1.3rem;">-</h2>
-            <div class="luck-meter">
-                <div id="luckFill" class="luck-fill"></div>
-            </div>
-            <p id="luckPercentage" style="font-size: 0.85rem; color: #a0aec0; text-align: right;">Daily Alignment: 0%</p>
-            
-            <p id="fortuneText" style="margin-top: 12px; line-height: 1.5; font-size: 0.95rem; color: #e2e8f0;">-</p>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div id="lblNums" class="title">Lucky Numbers</div>
-                    <div id="luckyNums" class="value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div id="lblHour" class="title">Power Hour</div>
-                    <div id="powerHour" class="value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div id="lblColor" class="title">Lucky Color</div>
-                    <div id="luckyColor" class="value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div id="lblAura" class="title">Aura Focus</div>
-                    <div id="auraFocus" class="value">-</div>
-                </div>
-            </div>
+        <!-- Touch Controls for Mobile / Instagram Webviews -->
+        <div class="controls-panel">
+            <button id="btnLeft" class="ctrl-btn">◀ Left</button>
+            <button id="btnJump" class="ctrl-btn btn-jump">🦘 Jump</button>
+            <button id="btnRight" class="ctrl-btn">Right ▶</button>
         </div>
     </div>
 
     <script>
-        let currentLang = 'en';
-
-        const translations = {
-            en: {
-                title: "Cosmic Daily Luck Wheel 🎡✨",
-                subtitle: "Enter your birthday to unlock today's celestial alignment",
-                labelDate: "Select Your Birthday",
-                btnSpin: "Unlock & Spin Wheel 🚀",
-                lblZodiac: "Zodiac",
-                lblElement: "Element",
-                lblLifePath: "Life Path",
-                alignmentText: "Daily Alignment",
-                lblNums: "Lucky Numbers",
-                lblHour: "Power Hour",
-                lblColor: "Lucky Color",
-                lblAura: "Aura Focus",
-                segments: [
-                    { label: "💖 Love", color: "#ff4b82", category: "Love & Relationships" },
-                    { label: "💰 Wealth", color: "#ffd700", category: "Financial Opportunity" },
-                    { label: "🚀 Career", color: "#9b51e0", category: "Career Breakthrough" },
-                    { label: "⚡ Vitality", color: "#ff7d00", category: "Energy & Stamina" },
-                    { label: "🎨 Flow", color: "#00f2fe", category: "Creative Flow" },
-                    { label: "🔮 Wildcard", color: "#e040fb", category: "Cosmic Surprise" },
-                    { label: "🛡️ Peace", color: "#4a90e2", category: "Inner Protection" },
-                    { label: "🌟 Jackpot", color: "#00e676", category: "Peak Luck Alignment" }
-                ],
-                zodiacs: ["Capricorn ♑", "Aquarius ♒", "Pisces ♓", "Aries ♈", "Taurus ♉", "Gemini ♊", "Cancer ♋", "Leo ♌", "Virgo ♍", "Libra ♎", "Scorpio ♏", "Sagittarius ♐"],
-                elements: { Fire: "Fire", Earth: "Earth", Air: "Air", Water: "Water" },
-                colors: ["Cosmic Gold", "Electric Cyan", "Royal Purple", "Emerald Green", "Solar Crimson"]
-            },
-            ta: {
-                title: "தினசரி ஜோதிட அதிர்ஷ்ட சக்கரம் 🎡✨",
-                subtitle: "இன்றைய அதிர்ஷ்டத்தை அறிய உங்கள் பிறந்த தேதியை உள்ளிடவும்",
-                labelDate: "உங்கள் பிறந்த தேதி",
-                btnSpin: "சுழற்றி பார்க்கவும் 🚀",
-                lblZodiac: "ராசி",
-                lblElement: "பஞ்சபூதம்",
-                lblLifePath: "எண் கணிதம்",
-                alignmentText: "இன்றைய அதிர்ஷ்டம்",
-                lblNums: "அதிர்ஷ்ட எண்கள்",
-                lblHour: "நல்ல நேரம்",
-                lblColor: "அதிர்ஷ்ட நிறம்",
-                lblAura: "ஆற்றல் கூறு",
-                segments: [
-                    { label: "💖 அன்பு", color: "#ff4b82", category: "அன்பு & உறவு" },
-                    { label: "💰 செல்வம்", color: "#ffd700", category: "செல்வம் & வளம்" },
-                    { label: "🚀 தொழில்", color: "#9b51e0", category: "தொழில் வெற்றி" },
-                    { label: "⚡ ஆற்றல்", color: "#ff7d00", category: "உடல் நலம் & ஆற்றல்" },
-                    { label: "🎨 கலை", color: "#00f2fe", category: "படைப்பாற்றல்" },
-                    { label: "🔮 அதிர்ஷ்டம்", color: "#e040fb", category: "விதியின் திருப்பம்" },
-                    { label: "🛡️ அமைதி", color: "#4a90e2", category: "மன அமைதி" },
-                    { label: "🌟 பேரதிர்ஷ்டம்", color: "#00e676", category: "பெரும் அதிர்ஷ்டம்" }
-                ],
-                zodiacs: ["மகரம் ♑", "கும்பம் ♒", "மீனம் ♓", "மேஷம் ♈", "ரிஷபம் ♉", "மிதுனம் ♊", "கடகம் ♋", "சிம்மம் ♌", "கன்னி ♍", "துலாம் ♎", "விருச்சிகம் ♏", "தனுசு ♐"],
-                elements: { Fire: "நெருப்பு", Earth: "நிலம்", Air: "காற்று", Water: "நீர்" },
-                colors: ["தங்கம் (Gold)", "நீலம் (Cyan)", "ஊதா (Purple)", "பச்சை (Green)", "சிவப்பு (Red)"]
-            }
-        };
-
-        const canvas = document.getElementById('wheel');
+        const canvas = document.getElementById('surfCanvas');
         const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spinBtn');
-        const birthdayInput = document.getElementById('birthday');
-        const langBtn = document.getElementById('langBtn');
 
-        let currentAngle = 0;
-        let isSpinning = false;
-        let lastSegmentIndex = -1;
+        // Game State Variables
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        let score = 0;
+        let highScore = localStorage.getItem('surf_highscore') || 0;
+        let speed = 4;
+        let frameCount = 0;
 
-        // Sound Effects (Web Audio API)
+        // Web Audio Synthesizer
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        function playTickSound() {
+        function playSound(type) {
             if (!audioCtx) return;
             try {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(480, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.03);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.03);
-            } catch (e) {}
-        }
 
-        function playWinSound() {
-            if (!audioCtx) return;
-            try {
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
+                if (type === 'jump') {
                     osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    const startTime = audioCtx.currentTime + i * 0.12;
-                    gain.gain.setValueAtTime(0.2, startTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(startTime);
-                    osc.stop(startTime + 0.4);
-                });
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'coin') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.08); // A5
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'crash') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
             } catch (e) {}
         }
 
-        // Toggle Language
-        langBtn.addEventListener('click', () => {
-            currentLang = currentLang === 'en' ? 'ta' : 'en';
-            langBtn.innerText = currentLang === 'en' ? 'தமிழ் 🔄' : 'English 🔄';
-            updateUI();
-            drawWheel();
-        });
+        // Surfer Player Object
+        const player = {
+            x: canvas.width / 2,
+            y: 380,
+            width: 30,
+            height: 45,
+            vx: 0,
+            speed: 5,
+            isJumping: false,
+            jumpHeight: 0,
+            jumpVelocity: 0,
+            
+            reset() {
+                this.x = canvas.width / 2;
+                this.vx = 0;
+                this.isJumping = false;
+                this.jumpHeight = 0;
+            },
 
-        function updateUI() {
-            const t = translations[currentLang];
-            document.getElementById('appTitle').innerText = t.title;
-            document.getElementById('appSubtitle').innerText = t.subtitle;
-            document.getElementById('dateLabel').innerText = t.labelDate;
-            document.getElementById('spinBtn').innerText = t.btnSpin;
-            document.getElementById('lblZodiac').innerText = t.lblZodiac;
-            document.getElementById('lblElement').innerText = t.lblElement;
-            document.getElementById('lblLifePath').innerText = t.lblLifePath;
-            document.getElementById('lblNums').innerText = t.lblNums;
-            document.getElementById('lblHour').innerText = t.lblHour;
-            document.getElementById('lblColor').innerText = t.lblColor;
-            document.getElementById('lblAura').innerText = t.lblAura;
-        }
+            jump() {
+                if (!this.isJumping) {
+                    this.isJumping = true;
+                    this.jumpVelocity = 10;
+                    playSound('jump');
+                }
+            },
 
-        function drawWheel() {
-            const segments = translations[currentLang].segments;
-            const numSegments = segments.length;
-            const arcSize = (2 * Math.PI) / numSegments;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = centerX - 10;
+            update() {
+                this.x += this.vx;
+                // Screen boundary constraints
+                if (this.x < 30) this.x = 30;
+                if (this.x > canvas.width - 30) this.x = canvas.width - 30;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Jump gravity physics
+                if (this.isJumping) {
+                    this.jumpHeight += this.jumpVelocity;
+                    this.jumpVelocity -= 0.6; // Gravity
+                    if (this.jumpHeight <= 0) {
+                        this.jumpHeight = 0;
+                        this.isJumping = false;
+                    }
+                }
+            },
 
-            for (let i = 0; i < numSegments; i++) {
-                const angle = currentAngle + i * arcSize;
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y - this.jumpHeight);
+
+                // Shadow when jumping
+                if (this.jumpHeight > 0) {
+                    ctx.beginPath();
+                    ctx.ellipse(0, this.jumpHeight + 15, 18, 6, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.fill();
+                }
+
+                // Surfboard
+                ctx.fillStyle = '#ffd700';
                 ctx.beginPath();
-                ctx.fillStyle = segments[i].color;
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
-                ctx.lineTo(centerX, centerY);
+                ctx.ellipse(0, 10, 10, 24, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.strokeStyle = "rgba(11, 13, 27, 0.5)";
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#ff7d00';
+                ctx.lineWidth = 2;
                 ctx.stroke();
 
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(angle + arcSize / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 13px 'Segoe UI', Arial, sans-serif";
-                ctx.shadowColor = "rgba(0,0,0,0.8)";
-                ctx.shadowBlur = 4;
-                ctx.fillText(segments[i].label, radius - 15, 5);
+                // Surfer Figure
+                ctx.fillStyle = '#00f2fe';
+                ctx.beginPath();
+                ctx.arc(0, -8, 7, 0, Math.PI * 2); // Head
+                ctx.fill();
+
+                ctx.fillStyle = '#ff4b82'; // Torso
+                ctx.fillRect(-6, -1, 12, 14);
+
                 ctx.restore();
             }
+        };
 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
-            ctx.fillStyle = "#0f1123";
-            ctx.fill();
-            ctx.strokeStyle = "#ffd700";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
+        // Entities Array (Obstacles & Coins)
+        let entities = [];
 
-        drawWheel();
-
-        function getDailyHash(birthdayStr) {
-            const todayStr = new Date().toISOString().slice(0, 10);
-            const combined = birthdayStr + todayStr;
-            let hash = 0;
-            for (let i = 0; i < combined.length; i++) {
-                hash = (hash << 5) - hash + combined.charCodeAt(i);
-                hash |= 0;
-            }
-            return Math.abs(hash);
-        }
-
-        function getZodiacInfo(dateStr) {
-            const date = new Date(dateStr);
-            const day = date.getUTCDate();
-            const month = date.getUTCMonth() + 1;
-            const year = date.getUTCFullYear();
-
-            let signIdx = 0;
-            let elemKey = "";
-
-            if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) { signIdx = 0; elemKey = "Earth"; }
-            else if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) { signIdx = 1; elemKey = "Air"; }
-            else if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) { signIdx = 2; elemKey = "Water"; }
-            else if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) { signIdx = 3; elemKey = "Fire"; }
-            else if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) { signIdx = 4; elemKey = "Earth"; }
-            else if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) { signIdx = 5; elemKey = "Air"; }
-            else if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) { signIdx = 6; elemKey = "Water"; }
-            else if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) { signIdx = 7; elemKey = "Fire"; }
-            else if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) { signIdx = 8; elemKey = "Earth"; }
-            else if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) { signIdx = 9; elemKey = "Air"; }
-            else if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) { signIdx = 10; elemKey = "Water"; }
-            else { signIdx = 11; elemKey = "Fire"; }
-
-            let digits = (day.toString() + month.toString() + year.toString()).split('');
-            let sum = digits.reduce((a, b) => parseInt(a) + parseInt(b), 0);
-            while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
-                sum = sum.toString().split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
-            }
-
-            return { signIdx, elemKey, lifePath: sum };
-        }
-
-        spinBtn.addEventListener('click', () => {
-            const bdayVal = birthdayInput.value;
-            if (!bdayVal || isSpinning) return;
-
-            initAudio();
-            isSpinning = true;
-            spinBtn.disabled = true;
-
-            const t = translations[currentLang];
-            const zInfo = getZodiacInfo(bdayVal);
+        function spawnEntity() {
+            const types = [
+                { type: 'rock', emoji: '🪨', size: 24, isObstacle: true },
+                { type: 'shark', emoji: '🦈', size: 28, isObstacle: true },
+                { type: 'buoy', emoji: '🟡', size: 20, isObstacle: true },
+                { type: 'star', emoji: '⭐', size: 22, isObstacle: false }
+            ];
             
-            document.getElementById('zodiacSign').innerText = t.zodiacs[zInfo.signIdx];
-            document.getElementById('zodiacElement').innerText = t.elements[zInfo.elemKey];
-            document.getElementById('lifePath').innerText = zInfo.lifePath;
-            document.getElementById('zodiacInfo').style.display = 'grid';
+            const selected = types[Math.floor(Math.random() * types.length)];
+            entities.push({
+                ...selected,
+                x: Math.random() * (canvas.width - 60) + 30,
+                y: -40
+            });
+        }
 
-            const hash = getDailyHash(bdayVal);
-            const targetSegmentIndex = hash % t.segments.length;
-            const luckScore = 60 + (hash % 41);
+        // Ocean Wave Lines Animation
+        let waveOffset = 0;
+        function drawWaves() {
+            waveOffset += speed * 0.5;
+            if (waveOffset > 40) waveOffset = 0;
 
-            const numSegments = t.segments.length;
-            const arcSize = (2 * Math.PI) / numSegments;
-            const targetAngleOffset = (numSegments - targetSegmentIndex - 0.5) * arcSize;
-            const extraRotations = 5 * 2 * Math.PI;
-            const finalAngle = extraRotations + targetAngleOffset;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 2;
 
-            let startTime = null;
-            const duration = 4000;
-            lastSegmentIndex = -1;
-
-            function animateSpin(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const progress = Math.min((timestamp - startTime) / duration, 1);
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                currentAngle = easeOut * finalAngle;
-
-                const pointerAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
-                const currentSegment = Math.floor(pointerAngle / arcSize);
-
-                if (currentSegment !== lastSegmentIndex) {
-                    playTickSound();
-                    lastSegmentIndex = currentSegment;
+            for (let y = waveOffset - 40; y < canvas.height; y += 40) {
+                ctx.beginPath();
+                for (let x = 0; x < canvas.width; x += 20) {
+                    ctx.lineTo(x, y + Math.sin((x + waveOffset) * 0.05) * 5);
                 }
+                ctx.stroke();
+            }
+        }
 
-                drawWheel();
+        // Main Loop Update
+        function update() {
+            if (gameState !== 'PLAYING') return;
 
-                if (progress < 1) {
-                    requestAnimationFrame(animateSpin);
-                } else {
-                    isSpinning = false;
-                    spinBtn.disabled = false;
-                    playWinSound();
-                    showResult(t.segments[targetSegmentIndex], luckScore, zInfo, hash);
-                }
+            frameCount++;
+            score += 0.1;
+            speed = 4 + Math.floor(score / 50) * 0.5; // Gradually speed up
+
+            player.update();
+
+            // Spawn Entities
+            if (frameCount % Math.max(30, 80 - Math.floor(speed * 3)) === 0) {
+                spawnEntity();
             }
 
-            requestAnimationFrame(animateSpin);
+            // Update Entities
+            for (let i = entities.length - 1; i >= 0; i--) {
+                let e = entities[i];
+                e.y += speed;
+
+                // Collision Detection
+                let dx = player.x - e.x;
+                let dy = player.y - player.jumpHeight - e.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.width / 2 + e.size / 2) {
+                    if (e.isObstacle) {
+                        // Jump over check
+                        if (!player.isJumping || player.jumpHeight < 15) {
+                            gameOver();
+                            return;
+                        }
+                    } else {
+                        // Collect Starfish
+                        score += 25;
+                        playSound('coin');
+                        entities.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                // Remove off-screen items
+                if (e.y > canvas.height + 40) {
+                    entities.splice(i, 1);
+                }
+            }
+        }
+
+        // Render Frame
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawWaves();
+
+            if (gameState === 'PLAYING') {
+                player.draw();
+
+                // Draw Entities
+                entities.forEach(e => {
+                    ctx.font = `${e.size}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(e.emoji, e.x, e.y);
+                });
+
+                // HUD Score
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Score: ${Math.floor(score)}`, 15, 30);
+            } else if (gameState === 'START') {
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText('Retro Surf Rider 🏄‍♂️', canvas.width / 2, 200);
+
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = '#00f2fe';
+                ctx.fillText('Dodge Rocks & Sharks | Catch Starfish', canvas.width / 2, 240);
+                ctx.fillText('Press SPACE or Tap Jump to Start', canvas.width / 2, 280);
+            } else if (gameState === 'GAMEOVER') {
+                ctx.fillStyle = '#ff4b82';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 28px sans-serif';
+                ctx.fillText('WIPE OUT! 💥', canvas.width / 2, 180);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '18px sans-serif';
+                ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, 230);
+                ctx.fillText(`High Score: ${Math.floor(highScore)}`, canvas.width / 2, 260);
+
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = '#00f2fe';
+                ctx.fillText('Press SPACE or Tap to Play Again', canvas.width / 2, 310);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+
+        function startGame() {
+            initAudio();
+            score = 0;
+            speed = 4;
+            frameCount = 0;
+            entities = [];
+            player.reset();
+            gameState = 'PLAYING';
+        }
+
+        function gameOver() {
+            playSound('crash');
+            gameState = 'GAMEOVER';
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('surf_highscore', highScore);
+            }
+        }
+
+        // Event Listeners (Keyboard)
+        window.addEventListener('keydown', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') player.vx = -player.speed;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') player.vx = player.speed;
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (gameState === 'PLAYING') player.jump();
+                else startGame();
+            }
         });
 
-        function showResult(segment, score, zodiac, hash) {
-            const t = translations[currentLang];
-            const resultCard = document.getElementById('resultCard');
-            resultCard.style.display = 'block';
+        window.addEventListener('keyup', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'ArrowRight' || e.code === 'KeyD') {
+                player.vx = 0;
+            }
+        });
 
-            document.getElementById('resultTitle').innerText = `${segment.label} (${segment.category})`;
-            document.getElementById('luckFill').style.width = `${score}%`;
-            document.getElementById('luckPercentage').innerText = `${t.alignmentText}: ${score}%`;
+        // Touch Control Listeners
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+        const btnJump = document.getElementById('btnJump');
 
-            const elemName = t.elements[zodiac.elemKey];
-            const fortunesEN = [
-                `Today your ${zodiac.elemKey} energy harmonizes with ${segment.category}. Trust your intuition mid-day!`,
-                `Cosmic alignment reveals a powerful spark in ${segment.category}. Life Path ${zodiac.lifePath} amplifies your focus.`,
-                `Celestial movements bring momentum to ${segment.category}. Expect a pleasant surprise before sunset!`
-            ];
-            const fortunesTA = [
-                `இன்று உங்கள் ${elemName} ஆற்றல் ${segment.category} உடன் அற்புதமாக இணைகிறது. உங்கள் உள்ளுணர்வை நம்புங்கள்!`,
-                `இன்றைய கிரக நிலை ${segment.category} துறையில் நல்ல வாய்ப்பை தருகிறது. உங்கள் எண் கணிதம் ${zodiac.lifePath} உங்களுக்கு சாதகமாக உள்ளது.`,
-                `விண்மீன் நகர்வுகள் ${segment.category} பகுதியில் பெரும் திருப்புமுனையை ஏற்படுத்தும். இன்று மாலைக்குள் நல்ல செய்தி கிடைக்கும்!`
-            ];
+        btnLeft.addEventListener('pointerdown', () => { player.vx = -player.speed; });
+        btnLeft.addEventListener('pointerup', () => { player.vx = 0; });
+        btnRight.addEventListener('pointerdown', () => { player.vx = player.speed; });
+        btnRight.addEventListener('pointerup', () => { player.vx = 0; });
+        
+        btnJump.addEventListener('pointerdown', () => {
+            if (gameState === 'PLAYING') player.jump();
+            else startGame();
+        });
 
-            const activeFortunes = currentLang === 'en' ? fortunesEN : fortunesTA;
-            document.getElementById('fortuneText').innerText = activeFortunes[hash % activeFortunes.length];
-
-            document.getElementById('luckyNums').innerText = `${(hash % 9) + 1}, ${(hash % 23) + 7}`;
-            document.getElementById('powerHour').innerText = `${(hash % 12) + 1}:00 ${(hash % 2 === 0 ? 'AM' : 'PM')}`;
-            document.getElementById('luckyColor').innerText = t.colors[hash % t.colors.length];
-            document.getElementById('auraFocus').innerText = elemName;
-        }
+        canvas.addEventListener('pointerdown', () => {
+            if (gameState !== 'PLAYING') startGame();
+        });
     </script>
 </body>
 </html>
