@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Daily Luck Spin Wheel 🎡✨</title>
+    <style>
+        :root {
+            --bg-color: #0b0d1b;
+            --card-bg: #161933;
+            --accent-gold: #ffd700;
+            --accent-purple: #8a2be2;
+            --accent-cyan: #00f2fe;
+            --text-color: #f0f4f8;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 15px;
+            background-image: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0b0d1b 70%);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--accent-gold);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: #a0aec0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Card Section */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Input Controls */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid #303651;
+            background: #0f1123;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input[type="date"]:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        button.btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-purple), #4a00e0);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button.btn-primary:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #9d4edd, #5e00f5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Zodiac Info Badge */
+        .zodiac-info {
+            display: none;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+        }
+
+        .zodiac-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .zodiac-badge .val {
+            font-weight: bold;
+            color: var(--accent-gold);
+            font-size: 0.95rem;
+        }
+
+        .zodiac-badge .lbl {
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+
+        /* Wheel Wrapper */
+        .wheel-wrapper {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 10px 0;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent-gold);
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+        }
+
+        canvas#wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.2), 0 0 50px rgba(138, 43, 226, 0.3);
+        }
+
+        /* Result Section */
+        .result-card {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .luck-meter {
+            height: 12px;
+            background: #0f1123;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0 15px 0;
+        }
+
+        .luck-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #00e676, #ffd700);
+            transition: width 1s ease-out;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: #0f1123;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-box .title {
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+
+        .stat-box .value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Cosmic Daily Luck Wheel 🎡✨</h1>
+        <p class="subtitle">Enter your birthday to unlock today's celestial alignment</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Form -->
+        <div class="card">
+            <div class="input-group">
+                <label for="birthday">Select Your Birthday</label>
+                <input type="date" id="birthday" required>
+                <button id="spinBtn" class="btn-primary">Unlock & Spin Wheel 🚀</button>
+            </div>
+
+            <!-- Zodiac & Numerology Details -->
+            <div id="zodiacInfo" class="zodiac-info">
+                <div class="zodiac-badge">
+                    <div id="zodiacSign" class="val">-</div>
+                    <div class="lbl">Zodiac</div>
+                </div>
+                <div class="zodiac-badge">
+                    <div id="zodiacElement" class="val">-</div>
+                    <div class="lbl">Element</div>
+                </div>
+                <div class="zodiac-badge">
+                    <div id="lifePath" class="val">-</div>
+                    <div class="lbl">Life Path</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spin Wheel Canvas -->
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <canvas id="wheel" width="320" height="320"></canvas>
+        </div>
+
+        <!-- Result / Fortune Card -->
+        <div id="resultCard" class="card result-card">
+            <h2 id="resultTitle" style="color: var(--accent-gold); font-size: 1.3rem;">-</h2>
+            <div class="luck-meter">
+                <div id="luckFill" class="luck-fill"></div>
+            </div>
+            <p id="luckPercentage" style="font-size: 0.85rem; color: #a0aec0; text-align: right;">Daily Alignment: 0%</p>
+            
+            <p id="fortuneText" style="margin-top: 12px; line-height: 1.5; font-size: 0.95rem; color: #e2e8f0;">
+                -
+            </p>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="title">Lucky Numbers</div>
+                    <div id="luckyNums" class="value">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="title">Power Hour</div>
+                    <div id="powerHour" class="value">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="title">Lucky Color</div>
+                    <div id="luckyColor" class="value">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="title">Aura Focus</div>
+                    <div id="auraFocus" class="value">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Segment Configurations
+        const segments = [
+            { label: "💖 Love", color: "#ff4b82", category: "Love & Relationships" },
+            { label: "💰 Wealth", color: "#ffd700", category: "Financial Opportunity" },
+            { label: "🚀 Career", color: "#9b51e0", category: "Career Breakthrough" },
+            { label: "⚡ Vitality", color: "#ff7d00", category: "Energy & Stamina" },
+            { label: "🎨 Flow", color: "#00f2fe", category: "Creative Flow" },
+            { label: "🔮 Wildcard", color: "#e040fb", category: "Cosmic Surprise" },
+            { label: "🛡️ Peace", color: "#4a90e2", category: "Inner Protection" },
+            { label: "🌟 Jackpot", color: "#00e676", category: "Peak Luck Alignment" }
+        ];
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const birthdayInput = document.getElementById('birthday');
+
+        let currentAngle = 0;
+        let isSpinning = false;
+        let lastSegmentIndex = -1;
+
+        // --- WEB AUDIO SYNTHESIZER ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTickSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(480 + Math.random() * 40, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.03);
+
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.03);
+            } catch (e) {}
+        }
+
+        function playWinSound() {
+            if (!audioCtx) return;
+            try {
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 arpeggio
+                notes.forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const startTime = audioCtx.currentTime + index * 0.12;
+                    const duration = 0.4;
+
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                });
+            } catch (e) {}
+        }
+        // -----------------------------
+
+        // Draw Canvas Wheel
+        function drawWheel() {
+            const numSegments = segments.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = currentAngle + i * arcSize;
+
+                // Slice background
+                ctx.beginPath();
+                ctx.fillStyle = segments[i].color;
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(11, 13, 27, 0.5)";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Text labels
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 14px 'Segoe UI', sans-serif";
+                ctx.shadowColor = "rgba(0,0,0,0.8)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(segments[i].label, radius - 15, 5);
+                ctx.restore();
+            }
+
+            // Center Pin
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = "#0f1123";
+            ctx.fill();
+            ctx.strokeStyle = "#ffd700";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        drawWheel();
+
+        // Deterministic Daily Hash
+        function getDailyHash(birthdayStr) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const combined = birthdayStr + todayStr;
+            let hash = 0;
+            for (let i = 0; i < combined.length; i++) {
+                hash = (hash << 5) - hash + combined.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
+        }
+
+        // Zodiac & Numerology
+        function getZodiacInfo(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getUTCDate();
+            const month = date.getUTCMonth() + 1;
+            const year = date.getUTCFullYear();
+
+            let sign = "";
+            let element = "";
+
+            if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) { sign = "Aquarius ♒"; element = "Air"; }
+            else if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) { sign = "Pisces ♓"; element = "Water"; }
+            else if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) { sign = "Aries ♈"; element = "Fire"; }
+            else if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) { sign = "Taurus ♉"; element = "Earth"; }
+            else if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) { sign = "Gemini ♊"; element = "Air"; }
+            else if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) { sign = "Cancer ♋"; element = "Water"; }
+            else if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) { sign = "Leo ♌"; element = "Fire"; }
+            else if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) { sign = "Virgo ♍"; element = "Earth"; }
+            else if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) { sign = "Libra ♎"; element = "Air"; }
+            else if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) { sign = "Scorpio ♏"; element = "Water"; }
+            else if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) { sign = "Sagittarius ♐"; element = "Fire"; }
+            else { sign = "Capricorn ♑"; element = "Earth"; }
+
+            let digits = (day.toString() + month.toString() + year.toString()).split('');
+            let sum = digits.reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+                sum = sum.toString().split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
+            }
+
+            return { sign, element, lifePath: sum };
+        }
+
+        // Spin Handler
+        spinBtn.addEventListener('click', () => {
+            const bdayVal = birthdayInput.value;
+            if (!bdayVal || isSpinning) return;
+
+            initAudio(); // Activate browser Web Audio context
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const zInfo = getZodiacInfo(bdayVal);
+            document.getElementById('zodiacSign').innerText = zInfo.sign;
+            document.getElementById('zodiacElement').innerText = zInfo.element;
+            document.getElementById('lifePath').innerText = zInfo.lifePath;
+            document.getElementById('zodiacInfo').style.display = 'grid';
+
+            const hash = getDailyHash(bdayVal);
+            const targetSegmentIndex = hash % segments.length;
+            const luckScore = 60 + (hash % 41);
+
+            const numSegments = segments.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+            
+            const targetAngleOffset = (numSegments - targetSegmentIndex - 0.5) * arcSize;
+            const extraRotations = 5 * 2 * Math.PI;
+            const finalAngle = extraRotations + targetAngleOffset;
+
+            let startTime = null;
+            const duration = 4000;
+            lastSegmentIndex = -1;
+
+            function animateSpin(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentAngle = easeOut * finalAngle;
+
+                // Track top pointer tick audio
+                const pointerAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
+                const currentSegment = Math.floor(pointerAngle / arcSize);
+
+                if (currentSegment !== lastSegmentIndex) {
+                    playTickSound();
+                    lastSegmentIndex = currentSegment;
+                }
+
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    playWinSound(); // Victory audio
+                    showResult(segments[targetSegmentIndex], luckScore, zInfo, hash);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        });
+
+        // Display Fortune Result
+        function showResult(segment, score, zodiac, hash) {
+            const resultCard = document.getElementById('resultCard');
+            resultCard.style.display = 'block';
+
+            document.getElementById('resultTitle').innerText = `${segment.label} (${segment.category})`;
+            document.getElementById('luckFill').style.width = `${score}%`;
+            document.getElementById('luckPercentage').innerText = `Daily Alignment: ${score}%`;
+
+            const fortunes = [
+                `Today your ${zodiac.element} energy naturally harmonizes with ${segment.category}. Trust your intuitive pulse around mid-day.`,
+                `Cosmic alignment reveals a powerful spark in ${segment.category}. Your Life Path ${zodiac.lifePath} amplifies your focus today.`,
+                `Celestial movements bring major momentum to ${segment.category}. Expect a pleasant turn of events before sunset!`
+            ];
+            document.getElementById('fortuneText').innerText = fortunes[hash % fortunes.length];
+
+            const colors = ["Cosmic Gold", "Electric Cyan", "Royal Purple", "Emerald Green", "Solar Crimson"];
+            document.getElementById('luckyNums').innerText = `${(hash % 9) + 1}, ${(hash % 23) + 7}`;
+            document.getElementById('powerHour').innerText = `${(hash % 12) + 1}:00 ${(hash % 2 === 0 ? 'AM' : 'PM')}`;
+            document.getElementById('luckyColor').innerText = colors[hash % colors.length];
+            document.getElementById('auraFocus').innerText = zodiac.element;
+        }
+    </script>
+</body>
+</html>
